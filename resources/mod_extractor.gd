@@ -156,3 +156,45 @@ static func _extract_local_worker(zip_path: String, downloads_dir: String, callb
 			jar_zip.close()
 
 	callback.call_deferred(repo_id, mod_version, installed_top_level.keys(), file_name + " installed!", true)
+
+
+static func begin_updater_extraction(buffer: PackedByteArray, version: String, downloads_dir: String, callback: Callable) -> void:
+	WorkerThreadPool.add_task(_extract_updater_worker.bind(buffer, version, downloads_dir, callback))
+
+static func _extract_updater_worker(buffer: PackedByteArray, version: String, downloads_dir: String, callback: Callable) -> void:
+	var temp_zip_path = downloads_dir.path_join("temp_update.zip")
+	var temp_file = FileAccess.open(temp_zip_path, FileAccess.WRITE)
+	if temp_file:
+		temp_file.store_buffer(buffer)
+		temp_file.close()
+	else:
+		callback.call_deferred("self/updater", version, [], "Failed to create temp ZIP.", false)
+		return
+
+	var zip := ZIPReader.new()
+	if zip.open(temp_zip_path) != OK:
+		DirAccess.remove_absolute(temp_zip_path)
+		callback.call_deferred("self/updater", version, [], "Failed to open ZIP archive.", false)
+		return
+		
+	var update_dir = downloads_dir.path_join("updater")
+	if DirAccess.dir_exists_absolute(update_dir):
+		FileUtiles.remove_dir_recursive(update_dir)
+	DirAccess.make_dir_recursive_absolute(update_dir)
+	
+	var files := zip.get_files()
+	for file in files:
+		var target_path = update_dir.path_join(file)
+		if file.ends_with("/"):
+			DirAccess.make_dir_recursive_absolute(target_path)
+		else:
+			DirAccess.make_dir_recursive_absolute(target_path.get_base_dir())
+			var file_data = zip.read_file(file)
+			var out_file = FileAccess.open(target_path, FileAccess.WRITE)
+			if out_file:
+				out_file.store_buffer(file_data)
+				out_file.close()
+				
+	zip.close()
+	DirAccess.remove_absolute(temp_zip_path)
+	callback.call_deferred("self/updater", version, [], "Update extracted!", true)
