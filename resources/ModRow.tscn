@@ -1,0 +1,54 @@
+[gd_scene format=3 uid="uid://mpylytbttins"]
+
+[ext_resource type="Script" uid="uid://b8haix45wlfym" path="res://resources/mod_row.gd" id="1_hldk4"]
+
+[node name="ModRow" type="PanelContainer" unique_id=418149000]
+script = ExtResource("1_hldk4")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=1928177401]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer" unique_id=1769608464]
+custom_minimum_size = Vector2(0, 32)
+layout_mode = 2
+
+[node name="ModNameLabel" type="Label" parent="MarginContainer/HBoxContainer" unique_id=552510015]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 1
+text = "DEBUG"
+vertical_alignment = 1
+
+[node name="VersionLabel" type="Label" parent="MarginContainer/HBoxContainer" unique_id=537237547]
+custom_minimum_size = Vector2(65, 0)
+layout_mode = 2
+text = "0.0.0"
+horizontal_alignment = 1
+
+[node name="StatusLabel" type="Label" parent="MarginContainer/HBoxContainer" unique_id=771926592]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "[DEBUG]"
+horizontal_alignment = 1
+
+[node name="EnableCheck" type="CheckButton" parent="MarginContainer/HBoxContainer" unique_id=345891873]
+layout_mode = 2
+
+[node name="UpdateButton" type="Button" parent="MarginContainer/HBoxContainer" unique_id=1274573052]
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+text = "Update"
+
+[node name="UninstallButton" type="Button" parent="MarginContainer/HBoxContainer" unique_id=392259286]
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+text = "Remove"
+
+[node name="InstallProgress" type="ProgressBar" parent="MarginContainer/HBoxContainer" unique_id=1666119992]
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+size_flags_vertical = 1

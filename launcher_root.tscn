@@ -1,0 +1,159 @@
+[gd_scene format=3 uid="uid://celsdiectcdue"]
+
+[ext_resource type="PackedScene" uid="uid://dk0uoiptcv686" path="res://mod_manager.tscn" id="1_1bw1c"]
+[ext_resource type="Script" uid="uid://b7ytlv643m2bd" path="res://resources/launcher_root.gd" id="1_2fb2l"]
+[ext_resource type="Texture2D" uid="uid://eir3glijhoew" path="res://resources/icons/Discord-Symbol-Blurple.png" id="3_1menk"]
+[ext_resource type="Texture2D" uid="uid://cogvnryjastr8" path="res://resources/icons/SeveredChains_Logo.png" id="3_xe0xd"]
+[ext_resource type="Texture2D" uid="uid://dyp7id53msd5u" path="res://resources/icons/GitHub_Invertocat_White.png" id="4_cta4r"]
+
+[sub_resource type="LabelSettings" id="LabelSettings_m5s0r"]
+font_size = 24
+font_color = Color(0.98039216, 0.98039216, 0.98039216, 1)
+outline_size = 4
+outline_color = Color(0.043137256, 0.043137256, 0.043137256, 1)
+
+[sub_resource type="LabelSettings" id="LabelSettings_bhyk7"]
+font_size = 14
+font_color = Color(0.98039216, 0.98039216, 0.98039216, 1)
+outline_size = 3
+outline_color = Color(0.043137256, 0.043137256, 0.043137256, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1menk"]
+bg_color = Color(0.2901961, 0.09803922, 0.52156866, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.03137255, 0.003921569, 0.12941177, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_taw3c"]
+bg_color = Color(0.14901961, 0.023529412, 0.3372549, 1)
+corner_radius_top_left = 3
+corner_radius_top_right = 3
+corner_radius_bottom_right = 3
+corner_radius_bottom_left = 3
+
+[node name="LauncherRoot" type="Control" unique_id=683004915]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_2fb2l")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=48258579]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="MainHBox" type="HBoxContainer" parent="MarginContainer" unique_id=326658175]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="LeftColumn" type="VBoxContainer" parent="MarginContainer/MainHBox" unique_id=1553273271]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="HeaderTitles" type="VBoxContainer" parent="MarginContainer/MainHBox/LeftColumn" unique_id=1821182180]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/HeaderTitles" unique_id=1915242541]
+layout_mode = 2
+text = "Severed Chains Launcher"
+label_settings = SubResource("LabelSettings_m5s0r")
+
+[node name="SubtitleLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/HeaderTitles" unique_id=1601743104]
+layout_mode = 2
+text = "Version:: 0.0.1"
+label_settings = SubResource("LabelSettings_bhyk7")
+
+[node name="TabContainer" type="TabContainer" parent="MarginContainer/MainHBox/LeftColumn" unique_id=101437403]
+layout_mode = 2
+size_flags_vertical = 3
+current_tab = 0
+
+[node name="News" type="MarginContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer" unique_id=802232248]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+metadata/_tab_index = 0
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/News" unique_id=1365433252]
+layout_mode = 2
+horizontal_scroll_mode = 4
+vertical_scroll_mode = 4
+
+[node name="RSSFeedList" type="VBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/News/ScrollContainer" unique_id=1537395288]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="Mod Manager" type="MarginContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer" unique_id=1744604853]
+visible = false
+layout_mode = 2
+metadata/_tab_index = 1
+
+[node name="ModManager" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Mod Manager" unique_id=248093997 instance=ExtResource("1_1bw1c")]
+layout_mode = 2
+
+[node name="RightColumn" type="VBoxContainer" parent="MarginContainer/MainHBox" unique_id=2031094878]
+layout_mode = 2
+
+[node name="Logo" type="TextureRect" parent="MarginContainer/MainHBox/RightColumn" unique_id=1190888753]
+custom_minimum_size = Vector2(200, 100)
+layout_mode = 2
+texture = ExtResource("3_xe0xd")
+expand_mode = 1
+
+[node name="SocialsHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/RightColumn" unique_id=1530645375]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Control" type="Control" parent="MarginContainer/MainHBox/RightColumn/SocialsHBox" unique_id=1453453727]
+custom_minimum_size = Vector2(5, 0)
+layout_mode = 2
+
+[node name="DiscordButton" type="TextureButton" parent="MarginContainer/MainHBox/RightColumn/SocialsHBox" unique_id=640385057]
+custom_minimum_size = Vector2(85, 85)
+layout_mode = 2
+texture_normal = ExtResource("3_1menk")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="GithubButton" type="TextureButton" parent="MarginContainer/MainHBox/RightColumn/SocialsHBox" unique_id=179776364]
+custom_minimum_size = Vector2(85, 85)
+layout_mode = 2
+texture_normal = ExtResource("4_cta4r")
+ignore_texture_size = true
+stretch_mode = 0
+
+[node name="Spacer" type="Control" parent="MarginContainer/MainHBox/RightColumn" unique_id=456674433]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="LaunchButton" type="Button" parent="MarginContainer/MainHBox/RightColumn" unique_id=1745348589]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_colors/font_color = Color(0.92941177, 0.90588236, 0.9647059, 1)
+theme_override_font_sizes/font_size = 36
+theme_override_styles/normal = SubResource("StyleBoxFlat_1menk")
+theme_override_styles/hover = SubResource("StyleBoxFlat_taw3c")
+text = "Launch"
+
+[node name="RSSRequest" type="HTTPRequest" parent="." unique_id=332261798]

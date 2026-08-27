@@ -1,0 +1,124 @@
+[gd_scene format=3 uid="uid://dk0uoiptcv686"]
+
+[ext_resource type="Script" uid="uid://bftjmup2ixigj" path="res://mod_manager.gd" id="1_av6jg"]
+
+[node name="ModManager" type="Control" unique_id=248093997]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_av6jg")
+metadata/_edit_use_anchors_ = true
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=480442580]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 15
+theme_override_constants/margin_top = 15
+theme_override_constants/margin_right = 15
+theme_override_constants/margin_bottom = 15
+
+[node name="MainVBox" type="VBoxContainer" parent="MarginContainer" unique_id=414585882]
+layout_mode = 2
+
+[node name="HeaderHBox" type="HBoxContainer" parent="MarginContainer/MainVBox" unique_id=1776028841]
+layout_mode = 2
+alignment = 2
+
+[node name="AddRepoButton" type="Button" parent="MarginContainer/MainVBox/HeaderHBox" unique_id=1686644031]
+layout_mode = 2
+text = "Add Repo"
+
+[node name="CustomRepoInput" type="LineEdit" parent="MarginContainer/MainVBox/HeaderHBox" unique_id=1562418950]
+layout_mode = 2
+size_flags_horizontal = 3
+placeholder_text = "githubuser\\repositoryname"
+
+[node name="AddLocalButton" type="Button" parent="MarginContainer/MainVBox/HeaderHBox" unique_id=1507726033]
+layout_mode = 2
+text = "Add Local Zip"
+
+[node name="VSeparator" type="VSeparator" parent="MarginContainer/MainVBox/HeaderHBox" unique_id=1914505057]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="UpdateButton" type="Button" parent="MarginContainer/MainVBox/HeaderHBox" unique_id=448364501]
+layout_mode = 2
+text = "Upgrade All Mods"
+
+[node name="FetchButton" type="Button" parent="MarginContainer/MainVBox/HeaderHBox" unique_id=949136513]
+layout_mode = 2
+text = "Check for Updates"
+
+[node name="StatusLabel" type="Label" parent="MarginContainer/MainVBox" unique_id=1024024852]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Ready"
+text_overrun_behavior = 3
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/MainVBox" unique_id=1786481903]
+layout_mode = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/MainVBox" unique_id=2083874229]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+
+[node name="ColumnHeader" type="HBoxContainer" parent="MarginContainer/MainVBox/MarginContainer" unique_id=1848331125]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/MainVBox/MarginContainer/ColumnHeader" unique_id=1642554610]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Name"
+
+[node name="Label2" type="Label" parent="MarginContainer/MainVBox/MarginContainer/ColumnHeader" unique_id=760342505]
+custom_minimum_size = Vector2(60, 0)
+layout_mode = 2
+text = "Version"
+horizontal_alignment = 1
+
+[node name="Label3" type="Label" parent="MarginContainer/MainVBox/MarginContainer/ColumnHeader" unique_id=616340148]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "Status"
+horizontal_alignment = 1
+
+[node name="Label4" type="Label" parent="MarginContainer/MainVBox/MarginContainer/ColumnHeader" unique_id=1238480411]
+custom_minimum_size = Vector2(65, 0)
+layout_mode = 2
+text = "Enabled"
+
+[node name="Label5" type="Label" parent="MarginContainer/MainVBox/MarginContainer/ColumnHeader" unique_id=1434443321]
+custom_minimum_size = Vector2(75, 0)
+layout_mode = 2
+text = "Manage"
+
+[node name="ModListScroll" type="ScrollContainer" parent="MarginContainer/MainVBox" unique_id=650879337]
+layout_mode = 2
+size_flags_vertical = 3
+vertical_scroll_mode = 4
+
+[node name="ModList" type="VBoxContainer" parent="MarginContainer/MainVBox/ModListScroll" unique_id=695218955]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="GitHubAPI" type="HTTPRequest" parent="." unique_id=1279199882]
+
+[node name="DownloadAPI" type="HTTPRequest" parent="." unique_id=1976442342]
+
+[node name="LocalZipDialog" type="FileDialog" parent="." unique_id=696255804]
+title = "Open a File"
+file_mode = 0
+display_mode = 1
+access = 2
+filters = PackedStringArray("*.zip ; ZIP Files")

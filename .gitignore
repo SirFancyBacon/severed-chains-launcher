@@ -1,0 +1,7 @@
+# Godot 4+ specific ignores
+.godot/
+/android/
+mod_manager_data/
+mods/
+shipping-binaries/
+*.translation
