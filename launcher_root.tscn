@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://celsdiectcdue"]
 
 [ext_resource type="PackedScene" uid="uid://dk0uoiptcv686" path="res://mod_manager.tscn" id="1_1bw1c"]
-[ext_resource type="Script" uid="uid://b7ytlv643m2bd" path="res://resources/launcher_root.gd" id="1_2fb2l"]
+[ext_resource type="Script" uid="uid://b7ytlv643m2bd" path="res://resources/scripts/launcher_root.gd" id="1_2fb2l"]
 [ext_resource type="Texture2D" uid="uid://eir3glijhoew" path="res://resources/icons/Discord-Symbol-Blurple.png" id="3_1menk"]
 [ext_resource type="Texture2D" uid="uid://cogvnryjastr8" path="res://resources/icons/SeveredChains_Logo.png" id="3_xe0xd"]
 [ext_resource type="Texture2D" uid="uid://dyp7id53msd5u" path="res://resources/icons/GitHub_Invertocat_White.png" id="4_cta4r"]
@@ -163,6 +163,11 @@ stretch_mode = 0
 layout_mode = 2
 size_flags_vertical = 3
 
+[node name="InstallSCButton" type="Button" parent="MarginContainer/MainHBox/RightColumn" unique_id=1938844197]
+layout_mode = 2
+text = "Download 
+Severed Chains"
+
 [node name="LaunchButton" type="Button" parent="MarginContainer/MainHBox/RightColumn" unique_id=1745348589]
 custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
@@ -174,3 +179,6 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_taw3c")
 text = "Launch"
 
 [node name="RSSRequest" type="HTTPRequest" parent="." unique_id=332261798]
+
+[node name="AcceptDialog" type="AcceptDialog" parent="." unique_id=1027312448]
+oversampling_override = 1.0

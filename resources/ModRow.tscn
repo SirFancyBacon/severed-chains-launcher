@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://mpylytbttins"]
 
-[ext_resource type="Script" uid="uid://b8haix45wlfym" path="res://resources/mod_row.gd" id="1_hldk4"]
+[ext_resource type="Script" uid="uid://b8haix45wlfym" path="res://resources/scripts/mod_row.gd" id="1_hldk4"]
 
 [node name="ModRow" type="PanelContainer" unique_id=418149000]
 script = ExtResource("1_hldk4")

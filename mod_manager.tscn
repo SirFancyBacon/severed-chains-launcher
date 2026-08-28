@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://dk0uoiptcv686"]
 
 [ext_resource type="Script" uid="uid://bftjmup2ixigj" path="res://mod_manager.gd" id="1_av6jg"]
+[ext_resource type="Script" uid="uid://dkupfpysubx52" path="res://resources/scripts/mod_service.gd" id="2_80kad"]
 
 [node name="ModManager" type="Control" unique_id=248093997]
 layout_mode = 3
@@ -13,6 +14,20 @@ size_flags_horizontal = 3
 size_flags_vertical = 3
 script = ExtResource("1_av6jg")
 metadata/_edit_use_anchors_ = true
+
+[node name="ModService" type="Node" parent="." unique_id=1594576254]
+script = ExtResource("2_80kad")
+
+[node name="GitHubAPI" type="HTTPRequest" parent="ModService" unique_id=1279199882]
+
+[node name="DownloadAPI" type="HTTPRequest" parent="ModService" unique_id=1976442342]
+
+[node name="LocalZipDialog" type="FileDialog" parent="ModService" unique_id=696255804]
+title = "Open a File"
+file_mode = 0
+display_mode = 1
+access = 2
+filters = PackedStringArray("*.zip ; ZIP Files")
 
 [node name="MarginContainer" type="MarginContainer" parent="." unique_id=480442580]
 layout_mode = 1
@@ -111,14 +126,3 @@ vertical_scroll_mode = 4
 [node name="ModList" type="VBoxContainer" parent="MarginContainer/MainVBox/ModListScroll" unique_id=695218955]
 layout_mode = 2
 size_flags_horizontal = 3
-
-[node name="GitHubAPI" type="HTTPRequest" parent="." unique_id=1279199882]
-
-[node name="DownloadAPI" type="HTTPRequest" parent="." unique_id=1976442342]
-
-[node name="LocalZipDialog" type="FileDialog" parent="." unique_id=696255804]
-title = "Open a File"
-file_mode = 0
-display_mode = 1
-access = 2
-filters = PackedStringArray("*.zip ; ZIP Files")
