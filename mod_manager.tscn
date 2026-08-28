@@ -97,26 +97,28 @@ size_flags_horizontal = 3
 text = "Name"
 
 [node name="Label2" type="Label" parent="MarginContainer/MainVBox/MarginContainer/ColumnHeader" unique_id=760342505]
-custom_minimum_size = Vector2(60, 0)
+custom_minimum_size = Vector2(125, 0)
 layout_mode = 2
 text = "Version"
 horizontal_alignment = 1
 
 [node name="Label3" type="Label" parent="MarginContainer/MainVBox/MarginContainer/ColumnHeader" unique_id=616340148]
-custom_minimum_size = Vector2(150, 0)
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 text = "Status"
 horizontal_alignment = 1
 
 [node name="Label4" type="Label" parent="MarginContainer/MainVBox/MarginContainer/ColumnHeader" unique_id=1238480411]
-custom_minimum_size = Vector2(65, 0)
+custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
-text = "Enabled"
+text = "Installed"
+horizontal_alignment = 1
 
 [node name="Label5" type="Label" parent="MarginContainer/MainVBox/MarginContainer/ColumnHeader" unique_id=1434443321]
-custom_minimum_size = Vector2(75, 0)
+custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 text = "Manage"
+horizontal_alignment = 1
 
 [node name="ModListScroll" type="ScrollContainer" parent="MarginContainer/MainVBox" unique_id=650879337]
 layout_mode = 2

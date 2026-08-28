@@ -24,13 +24,13 @@ text = "DEBUG"
 vertical_alignment = 1
 
 [node name="VersionLabel" type="Label" parent="MarginContainer/HBoxContainer" unique_id=537237547]
-custom_minimum_size = Vector2(65, 0)
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 text = "0.0.0"
 horizontal_alignment = 1
 
 [node name="StatusLabel" type="Label" parent="MarginContainer/HBoxContainer" unique_id=771926592]
-custom_minimum_size = Vector2(150, 0)
+custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
 text = "[DEBUG]"
 horizontal_alignment = 1
@@ -39,12 +39,12 @@ horizontal_alignment = 1
 layout_mode = 2
 
 [node name="UpdateButton" type="Button" parent="MarginContainer/HBoxContainer" unique_id=1274573052]
-custom_minimum_size = Vector2(75, 0)
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 text = "Update"
 
 [node name="UninstallButton" type="Button" parent="MarginContainer/HBoxContainer" unique_id=392259286]
-custom_minimum_size = Vector2(75, 0)
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 text = "Remove"
 
