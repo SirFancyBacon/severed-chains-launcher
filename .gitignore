@@ -5,3 +5,4 @@ mod_manager_data/
 mods/
 shipping-binaries/
 *.translation
+export_presets.cfg
