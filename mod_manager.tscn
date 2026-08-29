@@ -49,6 +49,7 @@ layout_mode = 2
 alignment = 2
 
 [node name="AddRepoButton" type="Button" parent="MarginContainer/MainVBox/HeaderHBox" unique_id=1686644031]
+custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 text = "Add Repo"
 
@@ -58,6 +59,7 @@ size_flags_horizontal = 3
 placeholder_text = "githubuser\\repositoryname"
 
 [node name="AddLocalButton" type="Button" parent="MarginContainer/MainVBox/HeaderHBox" unique_id=1507726033]
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
 text = "Add Local Zip"
 
@@ -66,10 +68,12 @@ layout_mode = 2
 theme_override_constants/separation = 8
 
 [node name="UpdateButton" type="Button" parent="MarginContainer/MainVBox/HeaderHBox" unique_id=448364501]
+custom_minimum_size = Vector2(150, 0)
 layout_mode = 2
 text = "Upgrade All Mods"
 
 [node name="FetchButton" type="Button" parent="MarginContainer/MainVBox/HeaderHBox" unique_id=949136513]
+custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 text = "Check for Updates"
 
@@ -115,7 +119,7 @@ text = "Installed"
 horizontal_alignment = 1
 
 [node name="Label5" type="Label" parent="MarginContainer/MainVBox/MarginContainer/ColumnHeader" unique_id=1434443321]
-custom_minimum_size = Vector2(90, 0)
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 text = "Manage"
 horizontal_alignment = 1

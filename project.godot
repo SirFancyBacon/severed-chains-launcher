@@ -11,13 +11,14 @@ config_version=5
 [application]
 
 config/name="Severed Chains Launcher"
-config/version="0.0.9"
+config/version="0.0.10"
 run/main_scene="uid://celsdiectcdue"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 run/low_processor_mode=true
 boot_splash/show_image=false
 boot_splash/use_filter=false
-config/icon="res://icon.svg"
+config/icon="uid://bnrruj8xfukgc"
+config/windows_native_icon="res://resources/icons/Fan_spirit_Dart.ico"
 
 [display]
 

@@ -1,0 +1,303 @@
+extends Control
+
+const RSS_FEED_URL: String = "https://legendofdragoon.org/feed/"
+const GITHUB_API_URL: String = "https://api.github.com/repos/"
+const LAUNCHER_REPO: String = "sirfancybacon/severed-chains-launcher"
+const ENGINE_REPO: String = "Legend-of-Dragoon-Modding/Severed-Chains"
+
+var base_dir: String = ""
+var ready_update_path: String = ""
+
+# --- UI References ---
+@onready var version_label: Label = $MarginContainer/MainHBox/LeftColumn/HeaderHBox/HeaderTitles/SubtitleLabel
+@onready var launcher_update_btn: Button = $MarginContainer/MainHBox/LeftColumn/HeaderHBox/LauncherUpdateButton
+@onready var news_container: VBoxContainer = $MarginContainer/MainHBox/LeftColumn/TabContainer/News/ScrollContainer/RSSFeedList
+@onready var launch_button: Button = $MarginContainer/MainHBox/RightColumn/LaunchButton
+@onready var sc_install_btn: Button = $MarginContainer/MainHBox/RightColumn/InstallSCButton
+@onready var discord_button: TextureButton = $MarginContainer/MainHBox/RightColumn/SocialsHBox/DiscordButton
+@onready var github_button: TextureButton = $MarginContainer/MainHBox/RightColumn/SocialsHBox/GithubButton
+@onready var iso_dialog: AcceptDialog = $AcceptDialog
+@onready var rss_http: HTTPRequest = $RSSRequest
+@onready var mod_manager: Control = $"MarginContainer/MainHBox/LeftColumn/TabContainer/Mod Manager/ModManager"
+
+func _ready() -> void:
+	if _handle_cli_update_handoff():
+		return
+
+	_initialize_environment()
+	_bind_ui_signals()
+	_load_rss_feed()
+
+# --- Lifecycle & Boot ---
+
+func _handle_cli_update_handoff() -> bool:
+	var args = OS.get_cmdline_args()
+	for i in range(args.size()):
+		if args[i] == "--apply-update" and args.size() > i + 2:
+			_apply_update_and_restart(args[i + 1].to_int(), args[i + 2])
+			return true
+	return false
+
+func _initialize_environment() -> void:
+	launcher_update_btn.visible = false
+	var app_version = ProjectSettings.get_setting("application/config/version", "1.0.0")
+	version_label.text = "Version:: " + app_version
+
+	if OS.has_feature("editor"):
+		base_dir = ProjectSettings.globalize_path("res://")
+	else:
+		base_dir = OS.get_executable_path().get_base_dir()
+		_check_for_launcher_updates()
+
+	_check_engine_installed()
+	mod_manager.initialize_paths(base_dir)
+
+func _bind_ui_signals() -> void:
+	launch_button.pressed.connect(_on_launch_pressed)
+	launcher_update_btn.pressed.connect(_on_launcher_update_pressed)
+	discord_button.pressed.connect(func(): OS.shell_open("https://discord.gg/rQWXgK5"))
+	github_button.pressed.connect(func(): OS.shell_open("https://github.com/" + ENGINE_REPO))
+
+# --- Game Launch Execution ---
+
+func _on_launch_pressed() -> void:
+	var script_name = "launch.bat" if OS.has_feature("windows") else "launch"
+	var script_path = base_dir.path_join(script_name)
+
+	if not FileAccess.file_exists(script_path):
+		print("Launch script not found at: ", script_path)
+		return
+
+	var pid = -1
+	if OS.has_feature("windows"):
+		# Bundle the command into a single string to preserve the && chain
+		var cmd_string = 'cd /d "%s" && launch.bat' % base_dir
+		pid = OS.create_process("cmd.exe", ["/c", cmd_string])
+	else:
+		FileAccess.set_unix_permissions(script_path, 493) # 0755
+		pid = OS.create_process("/bin/bash", [script_path])
+
+	if pid == -1:
+		print("Failed to launch game process.")
+# --- Severed Chains Engine Installer ---
+
+func _check_engine_installed() -> void:
+	var script_name = "launch.bat" if OS.has_feature("windows") else "launch"
+	if FileAccess.file_exists(base_dir.path_join(script_name)):
+		sc_install_btn.visible = false
+	else:
+		sc_install_btn.visible = true
+		sc_install_btn.pressed.connect(_start_engine_install)
+		iso_dialog.dialog_text = "Installation complete! Please place your Legend of Dragoon ISO files into the folder that just opened."
+
+func _start_engine_install() -> void:
+	sc_install_btn.disabled = true
+	sc_install_btn.text = "Checking releases..."
+	_fetch_github_release(ENGINE_REPO, func(release_data):
+		if release_data.is_empty():
+			sc_install_btn.text = "API Error"
+			sc_install_btn.disabled = false
+			return
+
+		var asset_url = _find_os_asset_url(release_data.get("assets", []))
+		if asset_url == "":
+			sc_install_btn.text = "No compatible build found"
+			sc_install_btn.disabled = false
+			return
+
+		sc_install_btn.text = "Downloading engine..."
+		_download_asset(asset_url, func(body):
+			sc_install_btn.text = "Extracting..."
+			ModExtractor.begin_root_extraction(body, asset_url, base_dir, _finalize_engine_install)
+		)
+	)
+
+func _finalize_engine_install(success: bool, _message: String) -> void:
+	if success:
+		sc_install_btn.visible = false
+		var iso_dir = base_dir.path_join("isos")
+		if not DirAccess.dir_exists_absolute(iso_dir):
+			DirAccess.make_dir_recursive_absolute(iso_dir)
+		OS.shell_open(ProjectSettings.globalize_path(iso_dir))
+		iso_dialog.popup_centered()
+	else:
+		sc_install_btn.text = "Install Failed"
+		sc_install_btn.disabled = false
+
+# --- Launcher Self-Updater ---
+
+func _check_for_launcher_updates() -> void:
+	_fetch_github_release(LAUNCHER_REPO, func(release_data):
+		if release_data.is_empty(): return
+		var latest_ver = release_data.get("tag_name", "").trim_prefix("v")
+		var current_ver = ProjectSettings.get_setting("application/config/version", "1.0.0").trim_prefix("v")
+
+		if latest_ver != "" and latest_ver != current_ver:
+			var asset_url = _find_os_asset_url(release_data.get("assets", []))
+			if asset_url != "":
+				_download_asset(asset_url, func(body):
+					ModExtractor.begin_updater_extraction(body, latest_ver, base_dir.path_join("mod_manager_data"), _on_updater_extracted)
+				)
+	)
+
+func _on_updater_extracted(repo: String, version: String, _items: Array, _msg: String, success: bool) -> void:
+	if not success: return
+	var update_dir = base_dir.path_join("mod_manager_data/updater")
+	var dir = DirAccess.open(update_dir)
+	if not dir: return
+
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir() and file_name.get_extension() not in ["pck", "zip", "tar", "gz"]:
+			if OS.has_feature("windows") and file_name.get_extension() != "exe":
+				file_name = dir.get_next()
+				continue
+			ready_update_path = update_dir.path_join(file_name)
+			break
+		file_name = dir.get_next()
+
+	if ready_update_path != "":
+		launcher_update_btn.text = "Update v" + version + " Ready!"
+		launcher_update_btn.visible = true
+
+func _on_launcher_update_pressed() -> void:
+	if OS.has_feature("linux") or OS.has_feature("macos"):
+		FileAccess.set_unix_permissions(ready_update_path, 493)
+
+	var pid = OS.create_process(ready_update_path, ["--apply-update", str(OS.get_process_id()), OS.get_executable_path()])
+	if pid == -1:
+		launcher_update_btn.text = "Error: Blocked by OS"
+	else:
+		get_tree().quit()
+
+func _apply_update_and_restart(target_pid: int, original_path: String) -> void:
+	var max_wait = 50
+	while OS.is_process_running(target_pid) and max_wait > 0:
+		OS.delay_msec(100)
+		max_wait -= 1
+	OS.delay_msec(500)
+
+	var current_exe = OS.get_executable_path()
+	if current_exe != original_path:
+		if FileAccess.file_exists(original_path):
+			DirAccess.remove_absolute(original_path)
+		DirAccess.copy_absolute(current_exe, original_path)
+
+		var current_pck = current_exe.get_basename() + ".pck"
+		var original_pck = original_path.get_basename() + ".pck"
+		if FileAccess.file_exists(current_pck):
+			if FileAccess.file_exists(original_pck):
+				DirAccess.remove_absolute(original_pck)
+			DirAccess.copy_absolute(current_pck, original_pck)
+
+		if OS.has_feature("linux") or OS.has_feature("macos") or OS.has_feature("bsd"):
+			FileAccess.set_unix_permissions(original_path, 493)
+
+		OS.create_process(original_path, [])
+	get_tree().quit()
+
+# --- Network & GitHub Helpers ---
+
+func _fetch_github_release(repo: String, callback: Callable) -> void:
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(_result, response_code, _headers, body):
+		http.queue_free()
+		if response_code != 200:
+			print("API Error on ", repo, " - Code: ", response_code)
+			callback.call({})
+			return
+		var json = JSON.new()
+		if json.parse(body.get_string_from_utf8()) == OK and json.data is Dictionary:
+			callback.call(json.data)
+		else:
+			callback.call({})
+	)
+	
+	var headers = ["User-Agent: SeveredChains-Launcher"]
+	var token_path = base_dir.path_join("mod_manager_data/github_api_token.txt")
+	if FileAccess.file_exists(token_path):
+		var token_file = FileAccess.open(token_path, FileAccess.READ)
+		var token = token_file.get_as_text().strip_edges()
+		if token != "":
+			headers.append("Authorization: Bearer " + token)
+			
+	http.request(GITHUB_API_URL + repo + "/releases/latest", headers)
+
+func _download_asset(url: String, callback: Callable) -> void:
+	var http = HTTPRequest.new()
+	add_child(http)
+	http.request_completed.connect(func(_result, response_code, _headers, body):
+		http.queue_free()
+		if response_code == 200:
+			callback.call(body)
+	)
+	http.request(url, ["User-Agent: SeveredChains-Launcher"])
+
+func _find_os_asset_url(assets: Array) -> String:
+	for asset in assets:
+		var name_str = asset.get("name", "").to_lower()
+		if OS.has_feature("windows") and "win" in name_str:
+			return asset.get("browser_download_url", "")
+		elif OS.has_feature("linux") and "linux" in name_str:
+			return asset.get("browser_download_url", "")
+		elif OS.has_feature("macos") and "mac" in name_str:
+			return asset.get("browser_download_url", "")
+	return ""
+
+# --- RSS Feed Logic ---
+
+func _load_rss_feed() -> void:
+	var loading_label = Label.new()
+	loading_label.name = "LoadingLabel"
+	loading_label.text = "Loading news..."
+	news_container.add_child(loading_label)
+
+	rss_http.request_completed.connect(_on_rss_completed)
+	rss_http.request(RSS_FEED_URL, ["User-Agent: SeveredChains-Launcher"])
+
+func _on_rss_completed(_result: int, response_code: int, _headers: PackedStringArray, body: PackedByteArray) -> void:
+	var loading_node = news_container.get_node_or_null("LoadingLabel")
+	if loading_node:
+		loading_node.queue_free()
+
+	if response_code != 200:
+		print("Failed to fetch RSS. Status: ", response_code)
+		return
+
+	var parser := XMLParser.new()
+	if parser.open_buffer(body) != OK: return
+
+	var in_item = false
+	var current_title = ""
+	var current_link = ""
+	var current_node = ""
+
+	while parser.read() == OK:
+		match parser.get_node_type():
+			XMLParser.NODE_ELEMENT:
+				current_node = parser.get_node_name().to_lower()
+				if current_node == "item":
+					in_item = true
+			XMLParser.NODE_TEXT:
+				if in_item:
+					var text = parser.get_node_data().strip_edges()
+					if text != "":
+						if current_node == "title": current_title = text
+						elif current_node == "link": current_link = text
+			XMLParser.NODE_ELEMENT_END:
+				if parser.get_node_name().to_lower() == "item":
+					in_item = false
+					_spawn_rss_item(current_title, current_link)
+					current_title = ""
+					current_link = ""
+
+func _spawn_rss_item(title: String, link: String) -> void:
+	var label = RichTextLabel.new()
+	label.bbcode_enabled = true
+	label.text = "[url=" + link + "]- " + title + "[/url]"
+	label.fit_content = true
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.meta_clicked.connect(func(meta_link): OS.shell_open(str(meta_link)))
+	news_container.add_child(label)

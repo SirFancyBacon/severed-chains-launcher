@@ -49,6 +49,6 @@ layout_mode = 2
 text = "Remove"
 
 [node name="InstallProgress" type="ProgressBar" parent="MarginContainer/HBoxContainer" unique_id=1666119992]
-custom_minimum_size = Vector2(75, 0)
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 size_flags_vertical = 1
