@@ -1,7 +1,7 @@
 extends Control
 class_name ModManagerUI
 
-const MOD_ROW_SCENE = preload("res://resources/ModRow.tscn")
+const MOD_ROW_SCENE = preload("res://resources/mod_row.tscn")
 
 @onready var mod_service: ModService = $ModService
 @onready var repo_input: LineEdit = $MarginContainer/MainVBox/HeaderHBox/CustomRepoInput

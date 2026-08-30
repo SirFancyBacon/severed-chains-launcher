@@ -13,6 +13,7 @@ var ready_update_path: String = ""
 @onready var version_label: Label = $MarginContainer/MainHBox/LeftColumn/HeaderHBox/HeaderTitles/SubtitleLabel
 @onready var launcher_update_btn: Button = $MarginContainer/MainHBox/LeftColumn/HeaderHBox/LauncherUpdateButton
 @onready var news_container: VBoxContainer = $MarginContainer/MainHBox/LeftColumn/TabContainer/News/ScrollContainer/RSSFeedList
+@onready var changelog_container: VBoxContainer = $"MarginContainer/MainHBox/LeftColumn/TabContainer/SC Changelog/ScrollContainer/ChangeLogList"
 @onready var launch_button: Button = $MarginContainer/MainHBox/RightColumn/LaunchButton
 @onready var sc_install_btn: Button = $MarginContainer/MainHBox/RightColumn/InstallSCButton
 @onready var discord_button: TextureButton = $MarginContainer/MainHBox/RightColumn/SocialsHBox/DiscordButton
@@ -31,6 +32,7 @@ func _ready() -> void:
 	_initialize_settings_tab()
 	_bind_ui_signals()
 	_load_rss_feed()
+	_fetch_changelog()
 
 # --- Lifecycle & Boot ---
 
@@ -285,6 +287,63 @@ func _find_os_asset_url(assets: Array) -> String:
 			return asset.get("browser_download_url", "")
 	return ""
 
+
+func _fetch_changelog() -> void:
+	var http = HTTPRequest.new()
+	add_child(http)
+	
+	http.request_completed.connect(func(_result, response_code, _headers, body):
+		http.queue_free()
+		print("GitHub Response Code: ", response_code)
+		if response_code != 200:
+			print("Error Body: ", body.get_string_from_utf8())
+			return
+			
+		var json = JSON.new()
+		if json.parse(body.get_string_from_utf8()) == OK and json.data is Array:
+			# Grab the 20 most recent commits
+			var latest_commits = json.data.slice(0, 30) 
+			
+			for commit_data in latest_commits:
+				var commit_info = commit_data.get("commit", {})
+				var message = commit_info.get("message", "No description provided.")
+				var github_user = commit_data.get("author")
+				var author = github_user.get("login") if github_user else commit_info.get("author", {}).get("name", "Unknown Developer")
+				var date = commit_info.get("author", {}).get("date", "")
+				var url = commit_data.get("html_url", "")
+				
+				# Split by newline to isolate the title from the body
+				var split_msg = message.split("\n")
+				var commit_title = split_msg[0]
+				var commit_desc = ""
+				
+				if split_msg.size() > 1:
+					commit_desc = "\n".join(split_msg.slice(1)).strip_edges()
+				else:
+					commit_desc = "Committed by " + author
+					
+				# Format the ISO 8601 date (2026-08-29T22:54:30Z -> 2026-08-29 22:54:30)
+				var clean_date = date.replace("T", " ").replace("Z", "")
+				
+				# Spawn your UI panel here
+				_spawn_changelog_item(commit_title, url, clean_date, commit_desc)
+	)
+	
+	# Target the main branch explicitly
+	var url = GITHUB_API_URL + ENGINE_REPO + "/commits?sha=main"
+	var headers = ["User-Agent: SeveredChains-Launcher"]
+	
+	# Reuse your existing token to prevent GitHub rate limiting
+	var token_path = base_dir.path_join("mod_manager_data/github_api_token.txt")
+	if FileAccess.file_exists(token_path):
+		var token_file = FileAccess.open(token_path, FileAccess.READ)
+		var token = token_file.get_as_text().strip_edges()
+		if token != "":
+			headers.append("Authorization: Bearer " + token)
+			
+	http.request(url, headers)
+
+
 # --- RSS Feed Logic ---
 
 func _load_rss_feed() -> void:
@@ -371,8 +430,15 @@ func _on_rss_completed(_result: int, response_code: int, _headers: PackedStringA
 					current_desc = ""
 
 func _spawn_rss_item(title: String, link: String, date: String, desc: String) -> void:
-	var panel_scene = preload("res://resources/NewsRow.tscn")
+	var panel_scene = preload("res://resources/news_row.tscn")
 	var panel_instance = panel_scene.instantiate()
 	news_container.add_child(panel_instance)
+	
+	panel_instance.setup(title, link, date, desc)
+
+func _spawn_changelog_item(title: String, link: String, date: String, desc: String) -> void:
+	var panel_scene = preload("res://resources/changelog_row.tscn")
+	var panel_instance = panel_scene.instantiate()
+	changelog_container.add_child(panel_instance)
 	
 	panel_instance.setup(title, link, date, desc)
