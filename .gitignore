@@ -6,3 +6,4 @@ mods/
 shipping-binaries/
 *.translation
 export_presets.cfg
+launch.conf

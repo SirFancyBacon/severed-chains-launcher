@@ -1,6 +1,7 @@
 extends Control
 
 const RSS_FEED_URL: String = "https://legendofdragoon.org/feed/"
+const LOD_FAN_PAGE: String = "https://legendofdragoon.org/"
 const GITHUB_API_URL: String = "https://api.github.com/repos/"
 const LAUNCHER_REPO: String = "sirfancybacon/severed-chains-launcher"
 const ENGINE_REPO: String = "Legend-of-Dragoon-Modding/Severed-Chains"
@@ -16,6 +17,7 @@ var ready_update_path: String = ""
 @onready var sc_install_btn: Button = $MarginContainer/MainHBox/RightColumn/InstallSCButton
 @onready var discord_button: TextureButton = $MarginContainer/MainHBox/RightColumn/SocialsHBox/DiscordButton
 @onready var github_button: TextureButton = $MarginContainer/MainHBox/RightColumn/SocialsHBox/GithubButton
+@onready var lod_home_button: TextureButton = $MarginContainer/MainHBox/RightColumn/Logo
 @onready var iso_dialog: AcceptDialog = $AcceptDialog
 @onready var rss_http: HTTPRequest = $RSSRequest
 @onready var mod_manager: Control = $"MarginContainer/MainHBox/LeftColumn/TabContainer/Mod Manager/ModManager"
@@ -59,6 +61,9 @@ func _bind_ui_signals() -> void:
 	launcher_update_btn.pressed.connect(_on_launcher_update_pressed)
 	discord_button.pressed.connect(func(): OS.shell_open("https://discord.gg/rQWXgK5"))
 	github_button.pressed.connect(func(): OS.shell_open("https://github.com/" + ENGINE_REPO))
+	lod_home_button.pressed.connect(func(): OS.shell_open(LOD_FAN_PAGE))
+
+
 
 # --- Settings Tab Logic ---
 

@@ -116,7 +116,7 @@ autowrap_mode = 2
 layout_mode = 2
 size_flags_vertical = 3
 current_tab = 0
-tab_0/title = "   News   "
+tab_0/title = "   LoD News   "
 tab_1/title = "   Mod Manager   "
 tab_2/title = "  Optional  "
 
@@ -127,7 +127,7 @@ theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 metadata/_tab_index = 0
-metadata/_tab_name = "   News   "
+metadata/_tab_name = "   LoD News   "
 
 [node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/News" unique_id=1365433252]
 layout_mode = 2
@@ -191,11 +191,12 @@ layout_mode = 2
 [node name="RightColumn" type="VBoxContainer" parent="MarginContainer/MainHBox" unique_id=2031094878]
 layout_mode = 2
 
-[node name="Logo" type="TextureRect" parent="MarginContainer/MainHBox/RightColumn" unique_id=1190888753]
+[node name="Logo" type="TextureButton" parent="MarginContainer/MainHBox/RightColumn" unique_id=1385979492]
 custom_minimum_size = Vector2(200, 100)
 layout_mode = 2
-texture = ExtResource("3_xe0xd")
-expand_mode = 1
+texture_normal = ExtResource("3_xe0xd")
+ignore_texture_size = true
+stretch_mode = 0
 
 [node name="SocialsHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/RightColumn" unique_id=1530645375]
 layout_mode = 2
