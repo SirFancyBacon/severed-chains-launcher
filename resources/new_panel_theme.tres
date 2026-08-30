@@ -1,0 +1,26 @@
+[gd_resource type="Theme" format=3 uid="uid://otu8kjlppln2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1menk"]
+bg_color = Color(0.101960786, 0.0627451, 0.03529412, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7gme5"]
+bg_color = Color(0.2901961, 0.20784314, 0.14509805, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.10159323, 0.0638278, 0.03514213, 1)
+
+[resource]
+Button/colors/font_color = Color(0.83137256, 0.76862746, 0.6313726, 1)
+Button/styles/hover = SubResource("StyleBoxFlat_1menk")
+Button/styles/normal = SubResource("StyleBoxFlat_7gme5")
+Label/colors/font_color = Color(0.83137256, 0.76862746, 0.6313726, 1)
+Label/colors/font_outline_color = Color(0.2901961, 0.20784314, 0.14509805, 1)
+Label/constants/outline_size = 10
+Label/font_sizes/font_size = 24
+LinkButton/colors/font_color = Color(0.9411765, 0.5647059, 0.1882353, 1)
+LinkButton/colors/font_hover_color = Color(0.81960785, 0.21960784, 0, 1)
+LinkButton/colors/font_outline_color = Color(0.2901961, 0.20784314, 0.14509805, 1)
+RichTextLabel/colors/default_color = Color(0.83137256, 0.76862746, 0.6313726, 1)
+RichTextLabel/colors/font_outline_color = Color(0.2901961, 0.20784314, 0.14509805, 1)

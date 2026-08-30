@@ -19,12 +19,14 @@ var ready_update_path: String = ""
 @onready var iso_dialog: AcceptDialog = $AcceptDialog
 @onready var rss_http: HTTPRequest = $RSSRequest
 @onready var mod_manager: Control = $"MarginContainer/MainHBox/LeftColumn/TabContainer/Mod Manager/ModManager"
+@onready var gpu_option_btn: OptionButton = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/GPUHBox/OptionButton
 
 func _ready() -> void:
 	if _handle_cli_update_handoff():
 		return
 
 	_initialize_environment()
+	_initialize_settings_tab()
 	_bind_ui_signals()
 	_load_rss_feed()
 
@@ -58,6 +60,37 @@ func _bind_ui_signals() -> void:
 	discord_button.pressed.connect(func(): OS.shell_open("https://discord.gg/rQWXgK5"))
 	github_button.pressed.connect(func(): OS.shell_open("https://github.com/" + ENGINE_REPO))
 
+# --- Settings Tab Logic ---
+
+func _initialize_settings_tab() -> void:
+	gpu_option_btn.clear()
+	gpu_option_btn.add_item("Auto (Let OS Decide)", 0)
+	gpu_option_btn.add_item("Discrete (High Performance)", 1)
+	gpu_option_btn.add_item("Integrated (Power Saving)", 2)
+	
+	# Dynamically check the system state based on the OS
+	var current_pref = FileUtiles.get_system_gpu_preference(base_dir)
+	
+	match current_pref:
+		1: gpu_option_btn.select(1)
+		2: gpu_option_btn.select(2)
+		_: gpu_option_btn.select(0)
+		
+	gpu_option_btn.item_selected.connect(_on_gpu_preference_changed)
+
+func _on_gpu_preference_changed(index: int) -> void:
+	var preference = 0
+	match index:
+		1: preference = 1 
+		2: preference = 2 
+		_: preference = 0 
+		
+	var conf_path = base_dir.path_join("launch.conf")
+	FileUtiles.write_config_value(conf_path, "GPU_PREFERENCE", str(preference))
+	
+	if OS.has_feature("windows"):
+		FileUtiles.apply_windows_gpu_registry(preference, base_dir)
+
 # --- Game Launch Execution ---
 
 func _on_launch_pressed() -> void:
@@ -79,6 +112,7 @@ func _on_launch_pressed() -> void:
 
 	if pid == -1:
 		print("Failed to launch game process.")
+
 # --- Severed Chains Engine Installer ---
 
 func _check_engine_installed() -> void:
@@ -272,6 +306,8 @@ func _on_rss_completed(_result: int, response_code: int, _headers: PackedStringA
 	var in_item = false
 	var current_title = ""
 	var current_link = ""
+	var current_date = ""
+	var current_desc = ""
 	var current_node = ""
 
 	while parser.read() == OK:
@@ -280,24 +316,58 @@ func _on_rss_completed(_result: int, response_code: int, _headers: PackedStringA
 				current_node = parser.get_node_name().to_lower()
 				if current_node == "item":
 					in_item = true
-			XMLParser.NODE_TEXT:
+					
+			# Catch both standard text and CDATA blocks
+			XMLParser.NODE_TEXT, XMLParser.NODE_CDATA:
 				if in_item:
-					var text = parser.get_node_data().strip_edges()
+					var text = ""
+					if parser.get_node_type() == XMLParser.NODE_TEXT:
+						# Standard text uses get_node_data()
+						text = parser.get_node_data().strip_edges()
+					else:
+						# CDATA uses get_node_name()
+						text = parser.get_node_name().strip_edges()
+						
 					if text != "":
-						if current_node == "title": current_title = text
-						elif current_node == "link": current_link = text
+						match current_node:
+							"title": current_title += text
+							"link": current_link += text
+							"pubdate": current_date += text
+							"description": current_desc += text
+							"content:encoded": current_desc += text
+							
 			XMLParser.NODE_ELEMENT_END:
 				if parser.get_node_name().to_lower() == "item":
 					in_item = false
-					_spawn_rss_item(current_title, current_link)
+					
+					# 1. Strip raw HTML tags out of the description
+					var regex = RegEx.new()
+					regex.compile("<[^>]*>")
+					var clean_desc = regex.sub(current_desc, "", true).strip_edges()
+					
+					# 2. Unescape XML entities like &#8217; (apostrophe) or &amp;
+					clean_desc = clean_desc.xml_unescape()
+					
+					# 3. Truncate text so it fits nicely in the panel
+					if clean_desc.length() > 200:
+						clean_desc = clean_desc.substr(0, 197) + "..."
+						
+					# 4. Truncate time and timezone from the pubDate
+					var date_parts = current_date.split(" ", false)
+					if date_parts.size() >= 4:
+						current_date = "%s %s %s %s" % [date_parts[0], date_parts[1], date_parts[2], date_parts[3]]
+					
+					_spawn_rss_item(current_title, current_link, current_date, clean_desc)
+					
+					# Reset variables for the next item
 					current_title = ""
 					current_link = ""
+					current_date = ""
+					current_desc = ""
 
-func _spawn_rss_item(title: String, link: String) -> void:
-	var label = RichTextLabel.new()
-	label.bbcode_enabled = true
-	label.text = "[url=" + link + "]- " + title + "[/url]"
-	label.fit_content = true
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	label.meta_clicked.connect(func(meta_link): OS.shell_open(str(meta_link)))
-	news_container.add_child(label)
+func _spawn_rss_item(title: String, link: String, date: String, desc: String) -> void:
+	var panel_scene = preload("res://resources/NewsRow.tscn")
+	var panel_instance = panel_scene.instantiate()
+	news_container.add_child(panel_instance)
+	
+	panel_instance.setup(title, link, date, desc)

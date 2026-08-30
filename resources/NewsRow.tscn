@@ -1,0 +1,50 @@
+[gd_scene format=3 uid="uid://du5o1hot2odou"]
+
+[ext_resource type="Script" uid="uid://cnqw7idkydihb" path="res://resources/scripts/news_row.gd" id="1_2itpv"]
+[ext_resource type="Theme" uid="uid://otu8kjlppln2" path="res://resources/new_panel_theme.tres" id="1_561mo"]
+
+[node name="NewRow" type="PanelContainer" unique_id=477302729]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_561mo")
+script = ExtResource("1_2itpv")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=2130504268]
+layout_mode = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer" unique_id=733829958]
+layout_mode = 2
+
+[node name="NewsTitle" type="LinkButton" parent="MarginContainer/VBoxContainer" unique_id=615133404]
+custom_minimum_size = Vector2(300, 0)
+layout_mode = 2
+text = "DEBUG - Title"
+text_overrun_behavior = 4
+
+[node name="NewsDate" type="Label" parent="MarginContainer/VBoxContainer" unique_id=2069356782]
+layout_mode = 2
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 10
+text = "1/1/1033"
+
+[node name="NewsDescription" type="RichTextLabel" parent="MarginContainer/VBoxContainer" unique_id=1513235180]
+layout_mode = 2
+size_flags_vertical = 3
+text = "DEBUG Article
+
+Black, Than, White Are
+All i see, in my infancy
+Red and Yellow than came to be
+Reaching out to me, lets me see"
+fit_content = true
+
+[node name="HSeparator" type="HSeparator" parent="MarginContainer/VBoxContainer" unique_id=930709777]
+layout_mode = 2
+theme_override_constants/separation = 8

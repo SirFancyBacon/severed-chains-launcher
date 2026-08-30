@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://celsdiectcdue"]
 
 [ext_resource type="PackedScene" uid="uid://dk0uoiptcv686" path="res://mod_manager.tscn" id="1_1bw1c"]
+[ext_resource type="Theme" uid="uid://i5ep68cpc4k3" path="res://resources/launcher_root_theme.tres" id="1_2f5jm"]
 [ext_resource type="Script" uid="uid://b7ytlv643m2bd" path="res://resources/scripts/launcher_root.gd" id="1_2fb2l"]
 [ext_resource type="FontFile" uid="uid://d146kvhjb83gg" path="res://resources/Cinzel-SemiBold.ttf" id="2_7gme5"]
 [ext_resource type="Texture2D" uid="uid://eir3glijhoew" path="res://resources/icons/Discord-Symbol-Blurple.png" id="3_1menk"]
@@ -8,55 +9,9 @@
 [ext_resource type="Texture2D" uid="uid://cogvnryjastr8" path="res://resources/icons/SeveredChains_Logo.png" id="3_xe0xd"]
 [ext_resource type="Texture2D" uid="uid://dyp7id53msd5u" path="res://resources/icons/GitHub_Invertocat_White.png" id="4_cta4r"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1menk"]
-bg_color = Color(0.101960786, 0.0627451, 0.03529412, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_7gme5"]
-bg_color = Color(0.2901961, 0.20784314, 0.14509805, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.10159323, 0.0638278, 0.03514213, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wn0d4"]
-bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_acp1h"]
-bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_2f5jm"]
-bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_exxsk"]
-bg_color = Color(0.101960786, 0.101960786, 0.101960786, 1)
-
-[sub_resource type="Theme" id="Theme_7gme5"]
-Button/colors/font_color = Color(0.83137256, 0.76862746, 0.6313726, 1)
-Button/styles/hover = SubResource("StyleBoxFlat_1menk")
-Button/styles/normal = SubResource("StyleBoxFlat_7gme5")
-Label/colors/font_color = Color(0.83137256, 0.76862746, 0.6313726, 1)
-Label/colors/font_outline_color = Color(0.11372549, 0.11372549, 0.11372549, 1)
-RichTextLabel/colors/default_color = Color(0.9411765, 0.5647059, 0.1882353, 1)
-RichTextLabel/colors/font_outline_color = Color(0.2901961, 0.20784314, 0.14509805, 1)
-TabContainer/colors/font_selected_color = Color(0.9411765, 0.5647059, 0.1882353, 1)
-TabContainer/colors/font_unselected_color = Color(0.9411765, 0.5647059, 0.1882353, 1)
-TabContainer/styles/panel = SubResource("StyleBoxFlat_wn0d4")
-TabContainer/styles/tab_hovered = SubResource("StyleBoxFlat_acp1h")
-TabContainer/styles/tab_selected = SubResource("StyleBoxFlat_2f5jm")
-TabContainer/styles/tab_unselected = SubResource("StyleBoxFlat_exxsk")
-
 [sub_resource type="LabelSettings" id="LabelSettings_m5s0r"]
 font = ExtResource("2_7gme5")
-font_size = 28
+font_size = 36
 font_color = Color(0.83137256, 0.76862746, 0.6313726, 1)
 outline_size = 4
 outline_color = Color(0.8194508, 0.21779892, 0, 0.78039217)
@@ -98,7 +53,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme = SubResource("Theme_7gme5")
+theme = ExtResource("1_2f5jm")
 script = ExtResource("1_2fb2l")
 
 [node name="ColorRect" type="ColorRect" parent="." unique_id=672995894]
@@ -163,6 +118,7 @@ size_flags_vertical = 3
 current_tab = 0
 tab_0/title = "   News   "
 tab_1/title = "   Mod Manager   "
+tab_2/title = "  Optional  "
 
 [node name="News" type="MarginContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer" unique_id=802232248]
 layout_mode = 2
@@ -191,6 +147,45 @@ metadata/_tab_index = 1
 metadata/_tab_name = "   Mod Manager   "
 
 [node name="ModManager" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Mod Manager" unique_id=248093997 instance=ExtResource("1_1bw1c")]
+layout_mode = 2
+
+[node name="Optional" type="MarginContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer" unique_id=996537095]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+metadata/_tab_index = 2
+metadata/_tab_name = "  Optional  "
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional" unique_id=521461937]
+layout_mode = 2
+
+[node name="GPUHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=225745252]
+layout_mode = 2
+
+[node name="FrontSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/GPUHBox" unique_id=1696901849]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/GPUHBox" unique_id=1298999563]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "For computers with two graphics cards (like gaming laptops). 
+Use this to force the game to run on your powerful graphics card for the best performance, 
+or the basic one to save battery."
+mouse_filter = 1
+text = "Laptop GPU Preferences"
+
+[node name="OptionButton" type="OptionButton" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/GPUHBox" unique_id=1416098286]
+layout_mode = 2
+tooltip_text = "For computers with two graphics cards (like gaming laptops). 
+Use this to force the game to run on your powerful graphics card for the best performance, 
+or the basic one to save battery."
+
+[node name="EndSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/GPUHBox" unique_id=1522740028]
+custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
 
 [node name="RightColumn" type="VBoxContainer" parent="MarginContainer/MainHBox" unique_id=2031094878]
@@ -238,6 +233,7 @@ custom_minimum_size = Vector2(0, 100)
 layout_mode = 2
 size_flags_vertical = 4
 theme_override_colors/font_color = Color(0.92941177, 0.90588236, 0.9647059, 1)
+theme_override_colors/font_hover_color = Color(0.92941177, 0.90588236, 0.9647059, 1)
 theme_override_font_sizes/font_size = 36
 theme_override_styles/normal = SubResource("StyleBoxFlat_cta4r")
 theme_override_styles/hover = SubResource("StyleBoxFlat_taw3c")

@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="Severed Chains Launcher"
-config/version="0.0.10"
+config/version="0.0.11"
 run/main_scene="uid://celsdiectcdue"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 run/low_processor_mode=true
