@@ -21,4 +21,4 @@ A cross-platform launcher and mod manager for [Severed Chains](https://github.co
 5. Launch the game.
 
 
-This project with build on Godot 4
+This project was built on Godot 4
