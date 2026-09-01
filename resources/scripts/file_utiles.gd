@@ -130,6 +130,42 @@ static func copy_recursive(src: String, dst: String) -> void:
 
 
 
+static func validate_iso_directory(base_dir: String) -> Dictionary:
+	var iso_dir = base_dir.path_join(AppConfig.ISOS_DIR)
+	
+	if not DirAccess.dir_exists_absolute(iso_dir):
+		return {"valid": false, "message": "The 'isos' folder is missing."}
+		
+	var dir = DirAccess.open(iso_dir)
+	if not dir:
+		return {"valid": false, "message": "Could not access the 'isos' folder."}
+		
+	var iso_count = 0
+	var bin_count = 0
+	
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	while file_name != "":
+		if not dir.current_is_dir():
+			var ext = file_name.get_extension().to_lower()
+			if ext == "iso":
+				iso_count += 1
+			elif ext == "bin":
+				bin_count += 1
+		file_name = dir.get_next()
+	dir.list_dir_end()
+	
+	if iso_count == 4 and bin_count == 0:
+		return {"valid": true, "message": "Ready to launch."}
+	elif bin_count == 4 and iso_count == 0:
+		return {"valid": true, "message": "Ready to launch."}
+	else:
+		return {
+			"valid": false,
+			"message": "Found %d ISO(s) and %d BIN(s). Please provide exactly 4 of the same format." % [iso_count, bin_count]
+		}
+
+
 
 # --- External Integrations ---
 
