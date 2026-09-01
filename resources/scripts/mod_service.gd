@@ -23,7 +23,13 @@ var default_mod_list: Array = [
 	"avionanx/tlot",
 	"pkolb-dev/Archipelagoon",
 	"Ink230/irongoon",
-	"DennytXVII/BattleRewardsMod"
+	"DennytXVII/BattleRewardsMod",
+	"Popoto-anonymous/SC-RareEnemyWeapons",
+	"Popoto-anonymous/SC-ELEMENTALWEAPONS",
+	"Popoto-anonymous/EverDragon-Gear",
+	"Popoto-anonymous/SC-SPGear"
+	
+	
 ]
 
 var fetch_queue: Array = []
