@@ -53,8 +53,8 @@ func _initialize_environment() -> void:
 		base_dir = ProjectSettings.globalize_path("res://")
 	else:
 		base_dir = OS.get_executable_path().get_base_dir()
-		_check_for_launcher_updates()
-
+	
+	_check_for_launcher_updates()
 	_check_engine_installed()
 	_check_launch_readiness()
 	mod_manager.initialize_paths(base_dir)
@@ -230,6 +230,7 @@ func _on_updater_extracted(repo: String, version: String, _items: Array, _msg: S
 	if ready_update_path != "":
 		launcher_update_btn.text = "Update v" + version + " Ready!"
 		launcher_update_btn.visible = true
+		launcher_update_btn.queue_redraw()
 
 func _on_launcher_update_pressed() -> void:
 	if OS.has_feature("linux") or OS.has_feature("macos"):
