@@ -119,7 +119,18 @@ func _initialize_settings_tab() -> void:
 	gpu_option_btn.add_item("Discrete (High Performance)", 1)
 	gpu_option_btn.add_item("Integrated (Power Saving)", 2)
 	
-	var current_pref = FileUtiles.get_system_gpu_preference(base_dir)
+	var conf_path = base_dir.path_join(AppConfig.LAUNCH_CONF)
+	
+	# Pass "-1" as the default to detect a first-time run
+	var saved_pref_str = FileUtiles.read_config_value(conf_path, "GPU_PREFERENCE", "-1")
+	var current_pref = saved_pref_str.to_int()
+	
+	if current_pref == -1:
+		current_pref = 1 # 1 = Discrete in UI (Translates to Registry GpuPreference=2)
+		FileUtiles.write_config_value(conf_path, "GPU_PREFERENCE", str(current_pref))
+		if OS.has_feature("windows"):
+			FileUtiles.apply_windows_gpu_registry(current_pref, base_dir)
+	
 	match current_pref:
 		1: gpu_option_btn.select(1)
 		2: gpu_option_btn.select(2)
