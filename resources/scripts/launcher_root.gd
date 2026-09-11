@@ -45,6 +45,7 @@ func _handle_cli_update_handoff() -> bool:
 	return false
 
 func _initialize_environment() -> void:
+	call_deferred("_apply_dpi_scaling")
 	launcher_update_btn.visible = false
 	var app_version = ProjectSettings.get_setting("application/config/version", "1.0.0")
 	version_label.text = "Version:: " + app_version
@@ -89,6 +90,26 @@ func _notification(what: int) -> void:
 		if base_dir != "": 
 			_check_launch_readiness()
 
+
+func _apply_dpi_scaling() -> void:
+	var screen_size = DisplayServer.screen_get_size()
+	var scale_factor = DisplayServer.screen_get_scale()
+	
+	# Manually force scaling on high-resolution displays if the OS reports 1.0
+	if scale_factor <= 1.0:
+		if screen_size.x >= 3840:
+			scale_factor = 2.0 # 4K: Scales 960x540 to 1920x1080
+		elif screen_size.x >= 1920:
+			scale_factor = 1.5 # 1080p: Scales 960x540 to 1440x810
+			
+	if scale_factor > 1.0:
+		var window = get_window()
+		
+		# Define the new size based on the base 960x540 resolution
+		var new_size = Vector2i(960 * scale_factor, 540 * scale_factor)
+		
+		# Apply size
+		window.size = new_size
 
 # --- Settings Tab Logic ---
 
