@@ -1,52 +1,57 @@
 [
   {
-    "repo": "avionanx/Stardust-Indicators",
-    "name": "Stardust Indicators",
-    "description": "Adds glowing effect to Stardusts."
+	"repo": "avionanx/Stardust-Indicators",
+	"name": "Stardust Indicators",
+	"description": "Adds glowing effect to Stardusts."
   },
   {
-    "repo": "Zychronix/icon-turn-order",
-    "name": "Turn Order Icons",
-    "description": "Visualizes the combat turn order with clean UI icons."
+	"repo": "Zychronix/icon-turn-order",
+	"name": "Turn Order Icons",
+	"description": "Visualizes the combat turn order with clean UI icons."
   },
   {
-    "repo": "avionanx/tlot",
-    "name": "The Legend of Tides",
-    "description": "Adds ability to fish up many kinds of fish (items) and treasures though a minigame."
+	"repo": "avionanx/tlot",
+	"name": "The Legend of Tides",
+	"description": "Adds ability to fish up many kinds of fish (items) and treasures though a minigame."
   },
   {
-    "repo": "pkolb-dev/Archipelagoon",
-    "name": "Archipelagoon",
-    "description": "Archipelagoon is a mod for Severed Chains that allows the player to connect to an archipelago multiworld!"
+	"repo": "pkolb-dev/Archipelagoon",
+	"name": "Archipelagoon",
+	"description": "Archipelagoon is a mod for Severed Chains that allows the player to connect to an archipelago multiworld!"
   },
   {
-    "repo": "Ink230/irongoon",
-    "name": "Iron Goon",
-    "description": "Character, Monster, Shop, and Stage randomizer with lots of options./NFuture plan to replicate 'Iron'-style playthroughs as more modding APIs become available."
+	"repo": "Ink230/irongoon",
+	"name": "Iron Goon",
+	"description": "Character, Monster, Shop, and Stage randomizer with lots of options./NFuture plan to replicate 'Iron'-style playthroughs as more modding APIs become available."
   },
   {
-    "repo": "DennytXVII/BattleRewardsMod",
-    "name": "Battle Rewards Mod",
-    "description": "Mod Author contact SirFancyBacon."
+	"repo": "Legend-of-Dragoon-Modding/sc-dragoon-modifier",
+	"name": "Dragoon Modifier",
+	"description": "Dragoon Modifier is a simple tool that anyone can use with a spreadsheet editor to make their own custom difficulties. It comes with my prepackaged difficulty preset with additional mods. See Readme.md"
   },
   {
-    "repo": "Popoto-anonymous/SC-RareEnemyWeapons",
-    "name": "Rare Enemy Weapons",
-    "description": "Mod Author contact SirFancyBacon."
+	"repo": "DennytXVII/BattleRewardsMod",
+	"name": "Battle Rewards Mod",
+	"description": "This mod allows the player to modify the amount of gold or experience gained through battles, via the options menu. "
   },
   {
-    "repo": "Popoto-anonymous/SC-ELEMENTALWEAPONS",
-    "name": "Elemental Weapons",
-    "description": "Adds elemental weapons for each character. See Readme.md"
+	"repo": "Popoto-anonymous/SC-RareEnemyWeapons",
+	"name": "Rare Enemy Weapons",
+	"description": "Mod Author contact SirFancyBacon."
   },
   {
-    "repo": "Popoto-anonymous/EverDragon-Gear",
-    "name": "EverDragon Gear",
-    "description": "Mod Author contact SirFancyBacon."
+	"repo": "Popoto-anonymous/SC-ELEMENTALWEAPONS",
+	"name": "Elemental Weapons",
+	"description": "Adds elemental weapons for each character. See Readme.md"
   },
   {
-    "repo": "Popoto-anonymous/SC-SPGear",
-    "name": "SP Gear",
-    "description": "A set of weapons (and other stuff) focused on helping you grind. See Readme.md"
+	"repo": "Popoto-anonymous/EverDragon-Gear",
+	"name": "EverDragon Gear",
+	"description": "Mod Author contact SirFancyBacon."
+  },
+  {
+	"repo": "Popoto-anonymous/SC-SPGear",
+	"name": "SP Gear",
+	"description": "A set of weapons (and other stuff) focused on helping you grind. See Readme.md"
   }
 ]
