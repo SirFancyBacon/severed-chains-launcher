@@ -28,19 +28,24 @@ func initialize_paths(root_dir: String) -> void:
 # --- Dual-List Synchronization ---
 
 func refresh_mod_list() -> void:
-	status_updated.emit("Fetching official mod list...")
+	status_updated.emit("Fetching remote mod list...")
 	
-	networker.fetch_official_list(func(official_list: Array):
-		var official_path = data_dir.path_join(AppConfig.OFFICIAL_LIST_FILE)
-		if not official_list.is_empty():
-			FileUtiles.save_json(official_path, official_list)
-		else:
-			official_list = FileUtiles.load_json(official_path, [])
+	networker.fetch_official_list(func(remote_list: Array):
+		var remote_path = data_dir.path_join(AppConfig.REMOTE_LIST_FILE)
+		
+		if not remote_list.is_empty():
+			FileUtiles.save_json(remote_path, remote_list)
 			
 		var custom_path = data_dir.path_join(AppConfig.CUSTOM_LIST_FILE)
 		var custom_list = FileUtiles.load_json(custom_path, [])
 		
-		var merged_list: Array = official_list.duplicate()
+		var merged_list: Array = []
+		# Handle both raw strings (legacy) and dictionaries (hybrid metadata)
+		for entry in remote_list:
+			var repo_name = entry.get("repo", "") if entry is Dictionary else entry
+			if not repo_name.is_empty() and not merged_list.has(repo_name):
+				merged_list.append(repo_name)
+				
 		for repo in custom_list:
 			if not merged_list.has(repo):
 				merged_list.append(repo)
@@ -156,6 +161,33 @@ func _execute_conflict_scan(repo: String, version: String, temp_dir: String) -> 
 			conflict_detected.emit(repo, conflicts, temp_dir)
 	)
 
+func _resolve_mod_display_name(repo: String, target_cache: String) -> String:
+	var local_meta_path = target_cache.path_join("sc_mod.json")
+	if FileAccess.file_exists(local_meta_path):
+		var meta = FileUtiles.load_json(local_meta_path, {})
+		var custom_name = meta.get("name", "")
+		if not custom_name.is_empty():
+			print("DEBUG: Found local sc_mod.json name -> ", custom_name)
+			return custom_name
+			
+	var remote_path = data_dir.path_join(AppConfig.REMOTE_LIST_FILE)
+	var remote_list = FileUtiles.load_json(remote_path, [])
+	print("DEBUG: Loaded remote list, entries count: ", remote_list.size())
+	
+	for entry in remote_list:
+		if entry is Dictionary:
+			var entry_repo = entry.get("repo", "")
+			print("DEBUG: Comparing entry repo '", entry_repo, "' with target '", repo, "'")
+			if entry_repo == repo:
+				var remote_name = entry.get("name", "")
+				print("DEBUG: Match found! Remote name -> ", remote_name)
+				if not remote_name.is_empty():
+					return remote_name
+				
+	var parts = repo.split("/")
+	print("DEBUG: No match found, falling back to repo name -> ", parts[1] if parts.size() > 1 else repo)
+	return parts[1] if parts.size() > 1 else repo
+
 func resolve_installation(repo: String, version: String, temp_dir: String, overwrite: bool) -> void:
 	status_updated.emit("Committing files...")
 	var target_cache = cache_dir.path_join(repo.split("/")[1])
@@ -163,12 +195,31 @@ func resolve_installation(repo: String, version: String, temp_dir: String, overw
 	ThreadedFileIO.commit_install_async(temp_dir, target_cache, game_mods_dir, overwrite, func(items: Array):
 		var state = FileUtiles.load_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), {})
 		if not state.has(repo): state[repo] = {}
+		
+		# Evaluate display name using the priority hierarchy
+		var display_name = _resolve_mod_display_name(repo, target_cache)
+		
+		# Grab description with similar fallback safety
+		var description = "No description provided."
+		var local_meta_path = target_cache.path_join("sc_mod.json")
+		if FileAccess.file_exists(local_meta_path):
+			description = FileUtiles.load_json(local_meta_path, {}).get("description", description)
+		else:
+			var remote_list = FileUtiles.load_json(data_dir.path_join(AppConfig.REMOTE_LIST_FILE), [])
+			for entry in remote_list:
+				if entry is Dictionary and entry.get("repo", "") == repo:
+					description = entry.get("description", description)
+					break
+		
 		state[repo]["version"] = version
 		state[repo]["items"] = items
 		state[repo]["enabled"] = true
+		state[repo]["display_name"] = display_name
+		state[repo]["description"] = description
+		
 		FileUtiles.save_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), state)
 		
-		status_updated.emit("Installed: " + repo.split("/")[1])
+		status_updated.emit("Installed: " + display_name)
 		install_completed.emit(repo, true)
 		if repo.begins_with("local/"): refresh_mod_list()
 	)

@@ -4,7 +4,7 @@ signal enable_toggled(repo: String, is_enabled: bool)
 signal update_requested(repo: String, asset_url: String, new_version: String)
 signal uninstall_requested(repo: String)
 
-@onready var name_label: Label = $MarginContainer/HBoxContainer/ModNameLabel
+@onready var name_label: LinkButton = $MarginContainer/HBoxContainer/ModNameLabel
 @onready var version_label: Label = $MarginContainer/HBoxContainer/VersionLabel
 @onready var status_label: Label = $MarginContainer/HBoxContainer/StatusLabel
 @onready var enable_check: CheckButton = $MarginContainer/HBoxContainer/EnableCheck
@@ -17,18 +17,20 @@ var latest_version: String = ""
 var asset_download_url: String = ""
 
 func _ready() -> void:
-	# Wire up the UI interactions to our local functions
+	name_label.pressed.connect(func(): OS.shell_open("https://github.com/" + repo_id))
 	enable_check.toggled.connect(_on_enable_check_toggled)
 	update_btn.pressed.connect(_on_update_button_pressed)
 	uninstall_btn.pressed.connect(_on_uninstall_button_pressed)
 
-func setup(repo: String, current_version: String, is_enabled: bool) -> void:
+func setup(repo: String, current_version: String, is_enabled: bool, display_name: String = "") -> void:
 	repo_id = repo
 	
-	# Safely extract the name even if the format is malformed
-	var parts = repo.split("/")
-	name_label.text = parts[1] if parts.size() > 1 else repo
-	
+	if not display_name.is_empty():
+		name_label.text = display_name
+	else:
+		var parts = repo.split("/")
+		name_label.text = parts[1] if parts.size() > 1 else repo
+		
 	version_label.text = current_version if current_version != "" else "N/A"
 	enable_check.button_pressed = is_enabled
 	enable_check.disabled = (current_version == "")

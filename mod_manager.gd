@@ -69,20 +69,38 @@ func _on_mod_lists_merged(merged_list: Array, installed_data: Dictionary) -> voi
 	for child in mod_list_container.get_children():
 		child.queue_free()
 		
+	var remote_path = state_manager.data_dir.path_join(AppConfig.REMOTE_LIST_FILE)
+	var remote_list = FileUtiles.load_json(remote_path, [])
+	print("DEBUG MANAGER: Remote list path -> ", remote_path)
+	print("DEBUG MANAGER: Remote list loaded count -> ", remote_list.size())
+		
 	for repo in merged_list:
 		var mod_data = installed_data.get(repo, {})
 		var cur_version = mod_data.get("version", "")
 		var is_enabled = mod_data.get("enabled", false)
-		_spawn_mod_row(repo, cur_version, is_enabled)
+		
+		var display_name = mod_data.get("display_name", "")
+		if display_name.is_empty():
+			for entry in remote_list:
+				print("DEBUG TYPE: typeof(entry) = ", typeof(entry), " | Value: ", entry)
+				if entry is Dictionary:
+					var entry_repo = String(entry.get("repo", "")).strip_edges()
+					var target_repo = String(repo).strip_edges()
+					if entry_repo == target_repo:
+						display_name = String(entry.get("name", "")).strip_edges()
+						print("SUCCESS: Matched! Name -> ", display_name)
+						break
+				else:
+					print("WARNING: Entry is NOT a dictionary! It is: ", entry)
+			
+		_spawn_mod_row(repo, cur_version, is_enabled, display_name)
 
-func _spawn_mod_row(repo: String, current_version: String, is_enabled: bool) -> void:
+func _spawn_mod_row(repo: String, current_version: String, is_enabled: bool, display_name: String = "") -> void:
 	var row = MOD_ROW_SCENE.instantiate()
 	mod_list_container.add_child(row)
-	row.setup(repo, current_version, is_enabled)
+	row.setup(repo, current_version, is_enabled, display_name)
 	
 	row.update_requested.connect(func(r, url, version): state_manager.begin_installation(r, url, version))
-	
-	# We will port these two functions over to ModStateManager in the final step
 	row.enable_toggled.connect(func(r, enabled): state_manager.toggle_mod_enabled(r, enabled))
 	row.uninstall_requested.connect(func(r): state_manager.uninstall_mod(r))
 

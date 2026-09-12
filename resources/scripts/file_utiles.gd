@@ -23,9 +23,16 @@ static func load_json(filepath: String, default_value: Variant) -> Variant:
 	return default_value
 
 # Serializes and saves data to a JSON file with tab indentation for readability
-static func save_json(filepath: String, data: Variant) -> void:
-	var file := FileAccess.open(filepath, FileAccess.WRITE)
-	file.store_string(JSON.stringify(data, "\t"))
+static func save_json(path: String, data) -> void:
+	# Ensure the directory exists before trying to write
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
+	
+	var file = FileAccess.open(path, FileAccess.WRITE)
+	if file:
+		file.store_string(JSON.stringify(data, "\t"))
+		file.close()
+	else:
+		print("ERROR: Failed to open file for writing at path: ", path)
 
 
 

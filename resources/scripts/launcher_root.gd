@@ -82,7 +82,7 @@ func _bind_ui_signals() -> void:
 	lod_home_button.pressed.connect(func(): OS.shell_open(AppConfig.LOD_FAN_PAGE))
 	add_token_btn.pressed.connect(_on_add_token_btn_pressed)
 	
-	issues_discord_button.pressed.connect(func(): OS.shell_open("https://discord.gg/rQWXgK5"))
+	issues_discord_button.pressed.connect(func(): OS.shell_open("https://discord.com/channels/307164262063669248/408013767151058946"))
 	issues_github_button.pressed.connect(func(): OS.shell_open("https://github.com/" + AppConfig.ENGINE_REPO + "/issues"))
 	issues_launcher_button.pressed.connect(func(): OS.shell_open("https://github.com/" + AppConfig.LAUNCHER_REPO + "/issues"))
 	

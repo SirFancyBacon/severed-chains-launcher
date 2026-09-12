@@ -16,12 +16,11 @@ theme_override_constants/margin_bottom = 5
 custom_minimum_size = Vector2(0, 32)
 layout_mode = 2
 
-[node name="ModNameLabel" type="Label" parent="MarginContainer/HBoxContainer" unique_id=552510015]
+[node name="ModNameLabel" type="LinkButton" parent="MarginContainer/HBoxContainer" unique_id=376153681]
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 1
 text = "DEBUG"
-vertical_alignment = 1
+underline = 1
 
 [node name="VersionLabel" type="Label" parent="MarginContainer/HBoxContainer" unique_id=537237547]
 custom_minimum_size = Vector2(100, 0)

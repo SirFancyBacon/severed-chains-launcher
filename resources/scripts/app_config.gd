@@ -8,9 +8,9 @@ const LAUNCHER_REPO: String = "sirfancybacon/severed-chains-launcher"
 const ENGINE_REPO: String = "Legend-of-Dragoon-Modding/Severed-Chains"
 
 # --- Mod Manager Paths ---
-const OFFICIAL_MOD_LIST_URL: String = "https://raw.githubusercontent.com/sirfancybacon/severed-chains-launcher/main/official_mod_list.json"
+const OFFICIAL_MOD_LIST_URL: String = "https://raw.githubusercontent.com/SirFancyBacon/severed-chains-launcher/main/remote_mod_list.json"
 const MOD_DATA_DIR: String = "mod_manager_data"
-const OFFICIAL_LIST_FILE: String = "official_mod_list.json"
+const REMOTE_LIST_FILE: String = "remote_mod_list.json"
 const CUSTOM_LIST_FILE: String = "custom_mod_list.json"
 const MOD_STATE_FILE: String = "installed_mods.json"
 const GAME_MODS_DIR: String = "mods"
