@@ -29,7 +29,7 @@ static func begin_updater_extraction(buffer: PackedByteArray, version: String, d
 			
 		_reset_directory(target_dir)
 		var success = _unzip_archive(temp_zip, target_dir)
-		DirAccess.remove_absolute(temp_zip)
+		if success: DirAccess.remove_absolute(temp_zip)
 		callback.call_deferred("self/updater", version, [], "Update extracted!", success)
 	)
 
@@ -48,72 +48,71 @@ static func begin_root_extraction(buffer: PackedByteArray, asset_url: String, ta
 		else:
 			success = _unzip_archive(temp_path, target_dir)
 			
-		DirAccess.remove_absolute(temp_path)
+		if success: DirAccess.remove_absolute(temp_path)
 		var msg = "Severed Chains installed successfully!" if success else "Failed to extract core archive."
 		callback.call_deferred(success, msg)
 	)
 
 # --- Core Processing Logic ---
 
-static func _process_mod_zip(zip_path: String, repo: String, default_version: String, downloads_dir: String, callback: Callable, cleanup_zip: bool) -> void:
+static func _process_mod_zip(zip_path: String, repo: String, default_version: String, target_dir: String, callback: Callable, cleanup_zip: bool) -> void:
 	var zip := ZIPReader.new()
 	if zip.open(zip_path) != OK:
 		if cleanup_zip: DirAccess.remove_absolute(zip_path)
-		callback.call_deferred(repo, default_version, [], "Failed to open ZIP archive.", false)
+		callback.call_deferred(repo, default_version, [], "Failed to open ZIP.", false)
 		return
 
-	var files := zip.get_files()
-	var jar_path: String = ""
-	for file in files:
-		if file.ends_with(".jar"):
-			jar_path = file
-			break
-
-	if jar_path == "":
+	var files = zip.get_files()
+	if files.is_empty():
 		zip.close()
 		if cleanup_zip: DirAccess.remove_absolute(zip_path)
-		callback.call_deferred(repo, default_version, [], "No .jar found in archive.", false)
+		callback.call_deferred(repo, default_version, [], "ZIP is empty.", false)
 		return
 
-	var true_root = jar_path.get_base_dir()
-	if true_root != "": true_root += "/"
+	# Detect if this is a GitHub zipball (all files wrapped in one master folder)
+	var root_folder = ""
+	var has_single_root = true
+	for f in files:
+		var parts = f.split("/", false)
+		if parts.size() > 0:
+			var top = parts[0] + "/"
+			if root_folder == "":
+				root_folder = top
+			elif not f.begins_with(root_folder):
+				has_single_root = false
+				break
 
-	var mod_name = repo.split("/")[1]
-	var mod_cache_dir = downloads_dir.path_join(mod_name)
-	_reset_directory(mod_cache_dir)
+	if not has_single_root:
+		root_folder = ""
 
-	var installed_top_level: Dictionary = {}
-	var extracted_jar_path: String = ""
+	var mod_name = repo.split("/")[1] if "/" in repo else repo
+	_reset_directory(target_dir)
 
-	for file in files:
-		if not file.begins_with(true_root): continue
-		var clean_path = file.trim_prefix(true_root)
-		if clean_path == "": continue
+	for f in files:
+		if f.ends_with("/"): continue
+		
+		# Strip the GitHub master folder if it exists, otherwise extract as-is
+		var clean_path = f.trim_prefix(root_folder) if root_folder != "" else f
+		if clean_path.is_empty(): continue
 
-		installed_top_level[clean_path.split("/")[0]] = true
-		var target_path = mod_cache_dir.path_join(clean_path)
-
-		if file.ends_with("/"):
-			DirAccess.make_dir_recursive_absolute(target_path)
-		else:
-			DirAccess.make_dir_recursive_absolute(target_path.get_base_dir())
-			var file_data = zip.read_file(file)
-			var out_file = FileAccess.open(target_path, FileAccess.WRITE)
-			if out_file:
-				out_file.store_buffer(file_data)
-				out_file.close()
-				if clean_path.ends_with(".jar"):
-					extracted_jar_path = target_path
+		var out_path = target_dir.path_join(clean_path)
+		DirAccess.make_dir_recursive_absolute(out_path.get_base_dir())
+		
+		var out_file = FileAccess.open(out_path, FileAccess.WRITE)
+		if out_file:
+			out_file.store_buffer(zip.read_file(f))
+			out_file.close()
 
 	zip.close()
 	if cleanup_zip: DirAccess.remove_absolute(zip_path)
 
-	var final_version = _read_manifest_version(extracted_jar_path) if default_version == "Local" else default_version
-	callback.call_deferred(repo, final_version, installed_top_level.keys(), mod_name + " ready!", true)
+	callback.call_deferred(repo, default_version, [], mod_name + " ready!", true)
 
 # --- Private Utilities ---
 
 static func _save_temp_file(buffer: PackedByteArray, path: String) -> bool:
+	# CRITICAL: Force creation of the parent directory before saving the file
+	DirAccess.make_dir_recursive_absolute(path.get_base_dir())
 	var file = FileAccess.open(path, FileAccess.WRITE)
 	if not file: return false
 	file.store_buffer(buffer)
@@ -144,18 +143,3 @@ static func _reset_directory(dir_path: String) -> void:
 	if DirAccess.dir_exists_absolute(dir_path):
 		FileUtiles.remove_dir_recursive(dir_path)
 	DirAccess.make_dir_recursive_absolute(dir_path)
-
-static func _read_manifest_version(jar_path: String) -> String:
-	if jar_path == "": return "Local"
-	var zip := ZIPReader.new()
-	if zip.open(jar_path) != OK: return "Local"
-	
-	var version = "Local"
-	if zip.file_exists("META-INF/MANIFEST.MF"):
-		var manifest = zip.read_file("META-INF/MANIFEST.MF").get_string_from_utf8()
-		for line in manifest.split("\n"):
-			if line.begins_with("Implementation-Version:") or line.begins_with("Plugin-Version:"):
-				version = line.split(":", true, 1)[1].strip_edges()
-				break
-	zip.close()
-	return version

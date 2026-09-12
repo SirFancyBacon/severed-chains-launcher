@@ -18,10 +18,19 @@ var ready_update_path: String = ""
 @onready var issues_launcher_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/IssuesHBox/ReportIssuesLauncher
 @onready var open_folder_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox/OpenGameDir
 @onready var open_iso_folder_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox/OpenGameIsoDir
+@onready var setup_guide_pc: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/SetupGuidesHBox/OpenSetupGuidePC
+@onready var setup_guide_steam: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/SetupGuidesHBox/OpenSetupGuideSD
 @onready var iso_dialog: AcceptDialog = $AcceptDialog
 @onready var rss_http: HTTPRequest = $RSSRequest
 @onready var mod_manager: Control = $"MarginContainer/MainHBox/LeftColumn/TabContainer/Mod Manager/ModManager"
 @onready var gpu_option_btn: OptionButton = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/GPUHBox/OptionButton
+@onready var add_token_btn: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/AddGitTokenButton
+
+var token_dialog: ConfirmationDialog
+var token_input: LineEdit
+var pending_update_url: String = ""
+var pending_update_version: String = ""
+var update_progress_dialog: AcceptDialog
 
 
 # --- Lifecycle & Boot ---
@@ -55,6 +64,10 @@ func _initialize_environment() -> void:
 	else:
 		base_dir = OS.get_executable_path().get_base_dir()
 	
+	
+	_setup_token_dialog()
+	_update_token_button_state()
+	_setup_update_dialog()
 	_check_for_launcher_updates()
 	_check_engine_installed()
 	_check_launch_readiness()
@@ -74,6 +87,9 @@ func _bind_ui_signals() -> void:
 	
 	open_folder_button.pressed.connect(func(): OS.shell_open(base_dir))
 	open_iso_folder_button.pressed.connect(func(): OS.shell_open(base_dir.path_join(AppConfig.ISOS_DIR)))
+	
+	setup_guide_pc.pressed.connect(func(): OS.shell_open("https://legendofdragoon.org/guides/setup-severed-chains/"))
+	setup_guide_steam.pressed.connect(func(): OS.shell_open("https://legendofdragoon.org/guides/setup-steamdeck/"))
 
 func _check_launch_readiness() -> void:
 	var validation = FileUtiles.validate_iso_directory(base_dir)
@@ -95,6 +111,8 @@ func _apply_dpi_scaling() -> void:
 	var screen_size = DisplayServer.screen_get_size()
 	var scale_factor = DisplayServer.screen_get_scale()
 	
+	var window = get_window()
+	
 	# Manually force scaling on high-resolution displays if the OS reports 1.0
 	if scale_factor <= 1.0:
 		if screen_size.x >= 3840:
@@ -102,14 +120,15 @@ func _apply_dpi_scaling() -> void:
 		elif screen_size.x >= 1920:
 			scale_factor = 1.5 # 1080p: Scales 960x540 to 1440x810
 			
+	# Apply the new size if scaled
 	if scale_factor > 1.0:
-		var window = get_window()
+		window.size = Vector2i(960 * scale_factor, 540 * scale_factor)
 		
-		# Define the new size based on the base 960x540 resolution
-		var new_size = Vector2i(960 * scale_factor, 540 * scale_factor)
-		
-		# Apply size
-		window.size = new_size
+	# Force the window strictly to the primary monitor's index
+	window.current_screen = DisplayServer.get_primary_screen()
+	
+	# Godot automatically calculates the exact center for the primary display
+	window.move_to_center()
 
 # --- Settings Tab Logic ---
 
@@ -235,13 +254,49 @@ func _check_for_launcher_updates() -> void:
 		if latest_ver != "" and latest_ver != current_ver:
 			var asset_url = _find_os_asset_url(release_data.get("assets", []))
 			if asset_url != "":
-				_download_asset(asset_url, func(body):
-					ModExtractor.begin_updater_extraction(body, latest_ver, base_dir.path_join("mod_manager_data"), _on_updater_extracted)
-				)
+				# Store the URL instead of downloading immediately
+				pending_update_url = asset_url
+				pending_update_version = latest_ver
+				launcher_update_btn.text = "Update v" + latest_ver + " Available"
+				launcher_update_btn.visible = true
+				launcher_update_btn.queue_redraw()
 	)
 
+func _on_launcher_update_pressed() -> void:
+	if ready_update_path != "":
+		# STEP 2: Extraction finished previously, restart the app
+		if OS.has_feature("linux") or OS.has_feature("macos"):
+			FileAccess.set_unix_permissions(ready_update_path, 493)
+
+		var pid = OS.create_process(ready_update_path, ["--apply-update", str(OS.get_process_id()), OS.get_executable_path()])
+		if pid == -1:
+			launcher_update_btn.text = "Error: Blocked by OS"
+		else:
+			get_tree().quit()
+			
+	elif pending_update_url != "":
+		# STEP 1: Fetching the update
+		launcher_update_btn.disabled = true
+		update_progress_dialog.dialog_text = "Downloading v%s...\nThis may take a moment." % pending_update_version
+		update_progress_dialog.popup_centered()
+		
+		_download_asset(pending_update_url, func(body):
+			if body.is_empty():
+				update_progress_dialog.hide()
+				launcher_update_btn.text = "Download Failed"
+				launcher_update_btn.disabled = false
+				return
+				
+			update_progress_dialog.dialog_text = "Extracting files..."
+			ModExtractor.begin_updater_extraction(body, pending_update_version, base_dir.path_join("mod_manager_data"), _on_updater_extracted)
+		)
+
 func _on_updater_extracted(repo: String, version: String, _items: Array, _msg: String, success: bool) -> void:
-	if not success: return
+	if not success: 
+		update_progress_dialog.hide()
+		launcher_update_btn.text = "Extraction Failed"
+		launcher_update_btn.disabled = false
+		return
 	
 	var update_dir = base_dir.path_join("mod_manager_data/updater")
 	var dir = DirAccess.open(update_dir)
@@ -259,20 +314,12 @@ func _on_updater_extracted(repo: String, version: String, _items: Array, _msg: S
 			break
 		file_name = dir.get_next()
 
+	update_progress_dialog.hide()
+
 	if ready_update_path != "":
-		launcher_update_btn.text = "Update v" + version + " Ready!"
-		launcher_update_btn.visible = true
+		launcher_update_btn.text = "Restart to Apply Update"
+		launcher_update_btn.disabled = false
 		launcher_update_btn.queue_redraw()
-
-func _on_launcher_update_pressed() -> void:
-	if OS.has_feature("linux") or OS.has_feature("macos"):
-		FileAccess.set_unix_permissions(ready_update_path, 493)
-
-	var pid = OS.create_process(ready_update_path, ["--apply-update", str(OS.get_process_id()), OS.get_executable_path()])
-	if pid == -1:
-		launcher_update_btn.text = "Error: Blocked by OS"
-	else:
-		get_tree().quit()
 
 func _apply_update_and_restart(target_pid: int, original_path: String) -> void:
 	var max_wait = 50
@@ -338,8 +385,14 @@ func _download_asset(url: String, callback: Callable) -> void:
 		http.queue_free()
 		if response_code == 200:
 			callback.call(body)
+		else:
+			callback.call(PackedByteArray()) # Return empty bytes on fail
 	)
-	http.request(url, ["User-Agent: SeveredChains-Launcher"])
+	
+	var err = http.request(url, ["User-Agent: SeveredChains-Launcher"])
+	if err != OK:
+		http.queue_free()
+		callback.call(PackedByteArray())
 
 func _find_os_asset_url(assets: Array) -> String:
 	for asset in assets:
@@ -533,3 +586,67 @@ func _spawn_changelog_item(title: String, link: String, date: String, desc: Stri
 	changelog_container.add_child(panel_instance)
 	
 	panel_instance.setup(title, link, date, desc)
+
+
+# --- Token UI Logic ---
+
+func _setup_token_dialog() -> void:
+	token_dialog = ConfirmationDialog.new()
+	token_dialog.title = "Add GitHub API Token"
+	token_dialog.ok_button_text = "Save"
+	token_dialog.cancel_button_text = "Cancel"
+	token_dialog.min_size = Vector2(400, 110)
+	
+	var vbox = VBoxContainer.new()
+	var label = Label.new()
+	label.text = "Paste your GitHub Personal Access Token to prevent API rate limits:"
+	vbox.add_child(label)
+	
+	token_input = LineEdit.new()
+	token_input.secret = true # Masks the input
+	token_input.placeholder_text = "ghp_..."
+	vbox.add_child(token_input)
+	
+	token_dialog.add_child(vbox)
+	add_child(token_dialog)
+	
+	token_dialog.confirmed.connect(_on_token_saved)
+	token_dialog.canceled.connect(func(): token_input.text = "")
+
+func _on_add_token_btn_pressed() -> void:
+	token_input.text = ""
+	token_dialog.popup_centered()
+
+func _on_token_saved() -> void:
+	var token = token_input.text.strip_edges()
+	if not token.is_empty():
+		var token_path = base_dir.path_join(AppConfig.TOKEN_PATH)
+		DirAccess.make_dir_recursive_absolute(token_path.get_base_dir())
+		
+		var file = FileAccess.open(token_path, FileAccess.WRITE)
+		if file:
+			file.store_string(token)
+			
+		_update_token_button_state()
+
+func _update_token_button_state() -> void:
+	# Re-using your existing helper to determine button state
+	if not _get_github_token().is_empty():
+		add_token_btn.text = "Token Found"
+		add_token_btn.disabled = true
+	else:
+		add_token_btn.text = "Add API Token"
+		add_token_btn.disabled = false
+
+
+func _setup_update_dialog() -> void:
+	update_progress_dialog = AcceptDialog.new()
+	update_progress_dialog.title = "Launcher Update"
+	update_progress_dialog.dialog_text = "Downloading update..."
+	update_progress_dialog.exclusive = true 
+	add_child(update_progress_dialog)
+	
+	# Hide the OK button so it acts strictly as a blocking loading screen
+	var ok_btn = update_progress_dialog.get_ok_button()
+	if ok_btn:
+		ok_btn.hide()

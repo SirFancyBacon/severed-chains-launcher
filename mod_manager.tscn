@@ -125,3 +125,9 @@ script = ExtResource("3_danjn")
 
 [node name="ModNetworker" type="Node" parent="ModStateManager" unique_id=1692057530]
 script = ExtResource("4_wib0u")
+
+[node name="LocalZipFileDialog" type="FileDialog" parent="." unique_id=941065629]
+title = "Open a File"
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.zip ; ZIP Files")

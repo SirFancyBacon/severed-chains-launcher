@@ -11,6 +11,7 @@ const MOD_ROW_SCENE = preload("res://resources/mod_row.tscn")
 @onready var add_local_btn: Button = $MarginContainer/MainVBox/HeaderHBox/AddLocalButton
 @onready var status_label: Label = $MarginContainer/MainVBox/StatusLabel
 @onready var mod_list_container: VBoxContainer = $MarginContainer/MainVBox/ModListScroll/ModList
+@onready var local_zip_dialog: FileDialog = $LocalZipFileDialog
 
 var conflict_dialog: ConfirmationDialog
 var _current_confirm: Callable
@@ -24,8 +25,11 @@ func initialize_paths(root_dir: String) -> void:
 	fetch_button.pressed.connect(state_manager.refresh_mod_list)
 	add_repo_btn.pressed.connect(_on_add_repo_btn_pressed)
 	
-	# We will re-wire local ZIP installs in the final phase
-	# add_local_btn.pressed.connect(state_manager.prompt_local_zip) 
+	# Open the dialog when the button is pressed
+	add_local_btn.pressed.connect(func(): local_zip_dialog.popup_centered_ratio(0.7))
+	
+	# Send the selected path to the state manager
+	local_zip_dialog.file_selected.connect(state_manager.install_local_zip)
 	
 	state_manager.initialize_paths(root_dir)
 	state_manager.refresh_mod_list()

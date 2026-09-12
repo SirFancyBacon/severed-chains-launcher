@@ -3,7 +3,7 @@ class_name ModStateManager
 
 signal status_updated(message: String)
 signal mod_lists_merged(merged_list: Array, installed_state: Dictionary)
-signal conflict_detected(repo: String, conflicting_files: Array, temp_dir: String)
+signal conflict_detected(repo: String, conflicts: Array, temp_dir: String)
 signal install_completed(repo: String, success: bool)
 signal remote_info_updated(repo: String, tag: String, url: String, current_version: String)
 
@@ -11,18 +11,19 @@ signal remote_info_updated(repo: String, tag: String, url: String, current_versi
 
 var base_dir: String
 var data_dir: String
+var cache_dir: String
 var game_mods_dir: String
 var backups_dir: String
 
 func initialize_paths(root_dir: String) -> void:
 	base_dir = root_dir
 	data_dir = base_dir.path_join(AppConfig.MOD_DATA_DIR)
+	cache_dir = base_dir.path_join(AppConfig.MOD_CACHE_DIR)
 	game_mods_dir = base_dir.path_join(AppConfig.GAME_MODS_DIR)
 	backups_dir = base_dir.path_join(AppConfig.BACKUPS_DIR)
 	
-	DirAccess.make_dir_recursive_absolute(data_dir)
-	DirAccess.make_dir_recursive_absolute(game_mods_dir)
-	DirAccess.make_dir_recursive_absolute(backups_dir)
+	for dir in [data_dir, cache_dir, game_mods_dir, backups_dir]:
+		DirAccess.make_dir_recursive_absolute(dir)
 
 # --- Dual-List Synchronization ---
 
@@ -39,7 +40,6 @@ func refresh_mod_list() -> void:
 		var custom_path = data_dir.path_join(AppConfig.CUSTOM_LIST_FILE)
 		var custom_list = FileUtiles.load_json(custom_path, [])
 		
-		# Merge without duplicates
 		var merged_list: Array = official_list.duplicate()
 		for repo in custom_list:
 			if not merged_list.has(repo):
@@ -52,13 +52,28 @@ func refresh_mod_list() -> void:
 	)
 
 func add_custom_repo(repo: String) -> void:
+	var parts = repo.split("/")
+	if parts.size() != 2 or parts[0].is_empty() or parts[1].is_empty():
+		status_updated.emit("Invalid format. Use 'author/repo'.")
+		return
+		
 	var custom_path = data_dir.path_join(AppConfig.CUSTOM_LIST_FILE)
 	var custom_list = FileUtiles.load_json(custom_path, [])
 	
-	if not custom_list.has(repo):
-		custom_list.append(repo)
-		FileUtiles.save_json(custom_path, custom_list)
-		refresh_mod_list()
+	if custom_list.has(repo):
+		status_updated.emit("Repository already exists.")
+		return
+		
+	status_updated.emit("Validating repository...")
+	networker.validate_repo(repo, func(is_valid: bool):
+		if is_valid:
+			custom_list.append(repo)
+			FileUtiles.save_json(custom_path, custom_list)
+			status_updated.emit("Repository added.")
+			refresh_mod_list()
+		else:
+			status_updated.emit("Repository not found on GitHub.")
+	)
 
 # --- Update Checking ---
 
@@ -67,16 +82,20 @@ func _check_updates_for_list(merged_list: Array, installed_state: Dictionary) ->
 		if repo.begins_with("local/"): continue
 			
 		var saved_etag = installed_state.get(repo, {}).get("etag", "")
-		# Changed from current_ver to current_version
 		var current_version = installed_state.get(repo, {}).get("version", "") 
 		
 		networker.fetch_mod_release(repo, saved_etag, func(code, data, new_etag):
 			if code == 200:
 				var tag = data.get("tag_name", "")
-				var assets = data.get("assets", [])
-				var url = assets[0].get("browser_download_url", "") if not assets.is_empty() else ""
 				
-				# Update our state with the new ETag so we don't fetch it again next time
+				# 1. Fallback to the auto-generated source zip if no assets exist
+				var url = data.get("zipball_url", "") 
+				var assets = data.get("assets", [])
+				
+				# 2. If they did upload a custom zip, override the fallback
+				if not assets.is_empty():
+					url = assets[0].get("browser_download_url", url)
+				
 				if not installed_state.has(repo): installed_state[repo] = {}
 				installed_state[repo]["remote_version"] = tag
 				installed_state[repo]["remote_url"] = url
@@ -85,13 +104,12 @@ func _check_updates_for_list(merged_list: Array, installed_state: Dictionary) ->
 				
 				remote_info_updated.emit(repo, tag, url, current_version)
 			elif code == 304:
-				# Not modified, use cached remote data
 				var tag = installed_state.get(repo, {}).get("remote_version", "")
 				var url = installed_state.get(repo, {}).get("remote_url", "")
 				remote_info_updated.emit(repo, tag, url, current_version)
 		)
 
-# --- Installation & Conflict Handoff ---
+# --- Installation Pipeline ---
 
 func begin_installation(repo: String, url: String, version: String) -> void:
 	status_updated.emit("Downloading " + repo.split("/")[1] + "...")
@@ -101,51 +119,110 @@ func begin_installation(repo: String, url: String, version: String) -> void:
 			status_updated.emit("Download failed for " + repo)
 			return
 			
-		status_updated.emit("Extracting and scanning...")
+		status_updated.emit("Extracting...")
 		var temp_dir = data_dir.path_join("temp_extract").path_join(repo.split("/")[1])
 		
-		# 1. Extract ZIP to a temporary folder
-		ModExtractor.begin_extraction(body, repo, version, temp_dir, func(_r, _v, _i, _m, extract_ok):
-			if not extract_ok: return
-				
-			# 2. Push conflict scanning to a background thread
-			WorkerThreadPool.add_task(func():
-				var conflicts = ThreadedFileIO.scan_for_conflicts(temp_dir, game_mods_dir)
-				
-				# 3. Call back to the main thread safely
-				call_deferred("_on_scan_completed", repo, version, temp_dir, conflicts)
-			)
+		ModExtractor.begin_extraction(body, repo, version, temp_dir, func(_r, _v, _i, msg, extract_ok):
+			if not extract_ok: 
+				call_deferred("emit_signal", "status_updated", "Error: " + msg)
+				return
+			call_deferred("_execute_conflict_scan", repo, version, temp_dir)
 		)
 	)
 
-func _on_scan_completed(repo: String, version: String, temp_dir: String, conflicts: Array) -> void:
-	if conflicts.is_empty():
-		# No conflicts, proceed immediately
-		resolve_installation(repo, version, temp_dir, true)
-	else:
-		# Halt and emit to the UI to ask the user for permission
-		status_updated.emit("Conflicts detected in " + repo)
-		conflict_detected.emit(repo, conflicts, temp_dir)
+func install_local_zip(zip_path: String) -> void:
+	var file_name = zip_path.get_file().get_basename()
+	var repo = "local/" + file_name
+	var version = "Local"
+	var temp_dir = data_dir.path_join("temp_extract").path_join(file_name)
+	
+	status_updated.emit("Extracting local zip...")
+	
+	ModExtractor.begin_local_extraction(zip_path, temp_dir, func(_r, _v, _i, msg, extract_ok):
+		if not extract_ok: 
+			call_deferred("emit_signal", "status_updated", "Error: " + msg)
+			return
+		call_deferred("_execute_conflict_scan", repo, version, temp_dir)
+	)
+
+func _execute_conflict_scan(repo: String, version: String, temp_dir: String) -> void:
+	status_updated.emit("Scanning for conflicts...")
+	ThreadedFileIO.scan_for_conflicts_async(temp_dir, game_mods_dir, func(conflicts: Array):
+		if conflicts.is_empty():
+			resolve_installation(repo, version, temp_dir, true)
+		else:
+			status_updated.emit("Conflicts detected in " + repo)
+			conflict_detected.emit(repo, conflicts, temp_dir)
+	)
 
 func resolve_installation(repo: String, version: String, temp_dir: String, overwrite: bool) -> void:
 	status_updated.emit("Committing files...")
+	var target_cache = cache_dir.path_join(repo.split("/")[1])
 	
-	WorkerThreadPool.add_task(func():
-		var success = ThreadedFileIO.commit_install(temp_dir, game_mods_dir, backups_dir, overwrite)
-		
-		# Clean up temp directory
-		FileUtiles.remove_dir_recursive(temp_dir)
-		
-		call_deferred("_finalize_install_state", repo, version, success)
-	)
-
-func _finalize_install_state(repo: String, version: String, success: bool) -> void:
-	if success:
+	ThreadedFileIO.commit_install_async(temp_dir, target_cache, game_mods_dir, overwrite, func(items: Array):
 		var state = FileUtiles.load_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), {})
 		if not state.has(repo): state[repo] = {}
 		state[repo]["version"] = version
+		state[repo]["items"] = items
 		state[repo]["enabled"] = true
 		FileUtiles.save_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), state)
 		
-		status_updated.emit("Installed successfully.")
-	install_completed.emit(repo, success)
+		status_updated.emit("Installed: " + repo.split("/")[1])
+		install_completed.emit(repo, true)
+		if repo.begins_with("local/"): refresh_mod_list()
+	)
+
+# --- Mod Management ---
+
+func toggle_mod_enabled(repo: String, is_enabled: bool) -> void:
+	var state = FileUtiles.load_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), {})
+	if not state.has(repo): return
+		
+	state[repo]["enabled"] = is_enabled
+	FileUtiles.save_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), state)
+	
+	var items = state[repo].get("items", [])
+	var target_cache = cache_dir.path_join(repo.split("/")[1])
+	var mod_name = repo.split("/")[1]
+	
+	status_updated.emit("Applying changes to " + mod_name + "...")
+	ThreadedFileIO.toggle_mod_async(target_cache, game_mods_dir, items, is_enabled, func():
+		status_updated.emit(mod_name + (" enabled." if is_enabled else " disabled."))
+	)
+
+func uninstall_mod(repo: String) -> void:
+	var state = FileUtiles.load_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), {})
+	if not state.has(repo): return
+		
+	var items = state[repo].get("items", [])
+	var target_cache = cache_dir.path_join(repo.split("/")[1])
+	var mod_name = repo.split("/")[1]
+	
+	status_updated.emit("Uninstalling " + mod_name + "...")
+	ThreadedFileIO.uninstall_mod_async(target_cache, game_mods_dir, items, func():
+		state.erase(repo)
+		FileUtiles.save_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), state)
+		
+		var custom_path = data_dir.path_join(AppConfig.CUSTOM_LIST_FILE)
+		var custom_list = FileUtiles.load_json(custom_path, [])
+		if custom_list.has(repo):
+			custom_list.erase(repo)
+			FileUtiles.save_json(custom_path, custom_list)
+			
+		status_updated.emit(mod_name + " uninstalled.")
+		refresh_mod_list()
+	)
+
+# --- Token Management ---
+
+func has_github_token() -> bool:
+	var token_path = base_dir.path_join(AppConfig.TOKEN_PATH)
+	return FileAccess.file_exists(token_path)
+
+func save_github_token(token: String) -> void:
+	var token_path = base_dir.path_join(AppConfig.TOKEN_PATH)
+	DirAccess.make_dir_recursive_absolute(token_path.get_base_dir())
+	
+	var file = FileAccess.open(token_path, FileAccess.WRITE)
+	if file:
+		file.store_string(token)

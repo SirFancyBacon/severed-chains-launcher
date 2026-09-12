@@ -14,6 +14,7 @@ config/name="Severed Chains Launcher"
 config/version="0.2.0"
 run/main_scene="uid://celsdiectcdue"
 config/features=PackedStringArray("4.7", "GL Compatibility")
+run/max_fps=60
 run/low_processor_mode=true
 boot_splash/show_image=false
 boot_splash/use_filter=false

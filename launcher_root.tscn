@@ -183,6 +183,7 @@ metadata/_tab_name = "  Misc  "
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional" unique_id=521461937]
 layout_mode = 2
+theme_override_constants/separation = 8
 
 [node name="GPUHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=225745252]
 layout_mode = 2
@@ -212,6 +213,7 @@ layout_mode = 2
 
 [node name="ReportIssuesLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=896702358]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 text = "Report Issues"
 horizontal_alignment = 1
 
@@ -239,6 +241,7 @@ text = "Launcher Issues"
 
 [node name="FileUtilsLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=1715246627]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 text = "File Utilities"
 horizontal_alignment = 1
 
@@ -252,6 +255,7 @@ layout_mode = 2
 [node name="OpenGameDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox" unique_id=1970393987]
 custom_minimum_size = Vector2(175, 0)
 layout_mode = 2
+tooltip_text = "Launcher,  debug.log, and game files."
 text = "Open Game 
 Directory"
 
@@ -260,6 +264,45 @@ custom_minimum_size = Vector2(175, 0)
 layout_mode = 2
 text = "Open isos
 Directory"
+
+[node name="SetupGuidesLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=1746596524]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Setup Guides"
+horizontal_alignment = 1
+
+[node name="SetupGuidesHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=67403560]
+layout_mode = 2
+
+[node name="FrontSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/SetupGuidesHBox" unique_id=898001319]
+custom_minimum_size = Vector2(125, 0)
+layout_mode = 2
+
+[node name="OpenSetupGuidePC" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/SetupGuidesHBox" unique_id=1704636904]
+custom_minimum_size = Vector2(175, 0)
+layout_mode = 2
+tooltip_text = "If running on 
+a Computer
+Start here"
+text = "Windows
+Linux/Mac"
+
+[node name="OpenSetupGuideSD" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/SetupGuidesHBox" unique_id=129422021]
+custom_minimum_size = Vector2(175, 0)
+layout_mode = 2
+tooltip_text = "If running on 
+SteamDeck
+Start here"
+text = "SteamDeck"
+
+[node name="AddGitTokenButton" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=527613026]
+layout_mode = 2
+tooltip_text = "Add a Github token.
+Prevents 403 limit error
+on github. 
+Needed if have 30 or more mods, 
+or open and close alot."
+text = "Add Git Token"
 
 [node name="RightColumn" type="VBoxContainer" parent="MarginContainer/MainHBox" unique_id=2031094878]
 layout_mode = 2

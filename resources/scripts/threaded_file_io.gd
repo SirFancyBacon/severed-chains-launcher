@@ -1,14 +1,44 @@
 class_name ThreadedFileIO
 
-# Scans a newly extracted mod against the live game directory to find overwrites.
-# Runs on a background thread.
-static func scan_for_conflicts(temp_extract_dir: String, game_mods_dir: String) -> Array:
-	var conflicts: Array = []
-	_scan_directory_recursive(temp_extract_dir, "", game_mods_dir, conflicts)
-	return conflicts
+# --- Public Async API ---
 
-static func _scan_directory_recursive(base_path: String, relative_path: String, target_dir: String, conflicts: Array) -> void:
-	var current_dir = base_path.path_join(relative_path)
+static func scan_for_conflicts_async(source_dir: String, live_dir: String, callback: Callable) -> void:
+	WorkerThreadPool.add_task(func():
+		var conflicts: Array = []
+		_scan_recursive(source_dir, "", live_dir, conflicts)
+		callback.call_deferred(conflicts)
+	)
+
+static func commit_install_async(temp_dir: String, cache_dir: String, live_dir: String, overwrite: bool, callback: Callable) -> void:
+	WorkerThreadPool.add_task(func():
+		var items: Array = []
+		_collect_and_move(temp_dir, "", cache_dir, items)
+		FileUtiles.remove_dir_recursive(temp_dir)
+		
+		_apply_mod_files(cache_dir, live_dir, items, overwrite)
+		callback.call_deferred(items)
+	)
+
+static func toggle_mod_async(cache_dir: String, live_dir: String, items: Array, is_enabled: bool, callback: Callable) -> void:
+	WorkerThreadPool.add_task(func():
+		if is_enabled:
+			_apply_mod_files(cache_dir, live_dir, items, true)
+		else:
+			_remove_mod_files(live_dir, items)
+		callback.call_deferred()
+	)
+
+static func uninstall_mod_async(cache_dir: String, live_dir: String, items: Array, callback: Callable) -> void:
+	WorkerThreadPool.add_task(func():
+		_remove_mod_files(live_dir, items)
+		FileUtiles.remove_dir_recursive(cache_dir)
+		callback.call_deferred()
+	)
+
+# --- Internal Synchronous Logic ---
+
+static func _scan_recursive(base_path: String, rel_path: String, target_dir: String, conflicts: Array) -> void:
+	var current_dir = base_path.path_join(rel_path)
 	var dir = DirAccess.open(current_dir)
 	if not dir: return
 	
@@ -16,56 +46,47 @@ static func _scan_directory_recursive(base_path: String, relative_path: String, 
 	var file_name = dir.get_next()
 	while file_name != "":
 		if file_name != "." and file_name != "..":
-			var item_relative = relative_path.path_join(file_name)
-			
+			var item_rel = rel_path.path_join(file_name)
 			if dir.current_is_dir():
-				_scan_directory_recursive(base_path, item_relative, target_dir, conflicts)
+				_scan_recursive(base_path, item_rel, target_dir, conflicts)
 			else:
-				var live_target = target_dir.path_join(item_relative)
-				if FileAccess.file_exists(live_target):
-					conflicts.append(item_relative)
-					
+				if FileAccess.file_exists(target_dir.path_join(item_rel)):
+					conflicts.append(item_rel)
 		file_name = dir.get_next()
 
-# Backs up vanilla files (if not already backed up) and moves the modded files into place.
-# Runs on a background thread.
-static func commit_install(temp_extract_dir: String, game_mods_dir: String, backups_dir: String, overwrite_conflicts: bool = true) -> bool:
-	var files_to_move: Array = []
-	_collect_files_recursive(temp_extract_dir, "", files_to_move)
+static func _collect_and_move(base_path: String, rel_path: String, cache_dir: String, items: Array) -> void:
+	var current_dir = base_path.path_join(rel_path)
+	var dir = DirAccess.open(current_dir)
+	if not dir: return
 	
-	for relative_file in files_to_move:
-		var src = temp_extract_dir.path_join(relative_file)
-		var dst = game_mods_dir.path_join(relative_file)
-		var backup = backups_dir.path_join(relative_file)
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	while file_name != "":
+		if file_name != "." and file_name != "..":
+			var item_rel = rel_path.path_join(file_name)
+			if dir.current_is_dir():
+				_collect_and_move(base_path, item_rel, cache_dir, items)
+			else:
+				var src = current_dir.path_join(file_name)
+				var dst = cache_dir.path_join(item_rel)
+				DirAccess.make_dir_recursive_absolute(dst.get_base_dir())
+				DirAccess.copy_absolute(src, dst)
+				items.append(item_rel)
+		file_name = dir.get_next()
+
+static func _apply_mod_files(cache_dir: String, live_dir: String, items: Array, overwrite: bool) -> void:
+	for rel in items:
+		var src = cache_dir.path_join(rel)
+		var dst = live_dir.path_join(rel)
 		
-		# Handle Conflicts & Backups
-		if FileAccess.file_exists(dst):
-			if not overwrite_conflicts:
-				continue # Skip this file if the user declined the overwrite
+		if FileAccess.file_exists(dst) and not overwrite:
+			continue
 				
-			# If a backup doesn't exist yet, this is the original vanilla file. Save it.
-			if not FileAccess.file_exists(backup):
-				DirAccess.make_dir_recursive_absolute(backup.get_base_dir())
-				DirAccess.copy_absolute(dst, backup)
-				
-		# Move the modded file into the live directory
 		DirAccess.make_dir_recursive_absolute(dst.get_base_dir())
 		DirAccess.copy_absolute(src, dst)
-		
-	return true
 
-static func _collect_files_recursive(base_path: String, relative_path: String, file_list: Array) -> void:
-	var current_dir = base_path.path_join(relative_path)
-	var dir = DirAccess.open(current_dir)
-	if not dir: return
-	
-	dir.list_dir_begin()
-	var file_name = dir.get_next()
-	while file_name != "":
-		if file_name != "." and file_name != "..":
-			var item_relative = relative_path.path_join(file_name)
-			if dir.current_is_dir():
-				_collect_files_recursive(base_path, item_relative, file_list)
-			else:
-				file_list.append(item_relative)
-		file_name = dir.get_next()
+static func _remove_mod_files(live_dir: String, items: Array) -> void:
+	for rel in items:
+		var dst = live_dir.path_join(rel)
+		if FileAccess.file_exists(dst):
+			DirAccess.remove_absolute(dst)

@@ -24,7 +24,11 @@ func _ready() -> void:
 
 func setup(repo: String, current_version: String, is_enabled: bool) -> void:
 	repo_id = repo
-	name_label.text = repo.split("/")[1]
+	
+	# Safely extract the name even if the format is malformed
+	var parts = repo.split("/")
+	name_label.text = parts[1] if parts.size() > 1 else repo
+	
 	version_label.text = current_version if current_version != "" else "N/A"
 	enable_check.button_pressed = is_enabled
 	enable_check.disabled = (current_version == "")
