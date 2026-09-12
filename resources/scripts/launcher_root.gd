@@ -80,6 +80,7 @@ func _bind_ui_signals() -> void:
 	discord_button.pressed.connect(func(): OS.shell_open("https://discord.gg/rQWXgK5"))
 	github_button.pressed.connect(func(): OS.shell_open("https://github.com/" + AppConfig.ENGINE_REPO))
 	lod_home_button.pressed.connect(func(): OS.shell_open(AppConfig.LOD_FAN_PAGE))
+	add_token_btn.pressed.connect(_on_add_token_btn_pressed)
 	
 	issues_discord_button.pressed.connect(func(): OS.shell_open("https://discord.gg/rQWXgK5"))
 	issues_github_button.pressed.connect(func(): OS.shell_open("https://github.com/" + AppConfig.ENGINE_REPO + "/issues"))
@@ -626,6 +627,7 @@ func _on_token_saved() -> void:
 		var file = FileAccess.open(token_path, FileAccess.WRITE)
 		if file:
 			file.store_string(token)
+			file.close()
 			
 		_update_token_button_state()
 

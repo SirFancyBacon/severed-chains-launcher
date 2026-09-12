@@ -12,6 +12,7 @@ const MOD_ROW_SCENE = preload("res://resources/mod_row.tscn")
 @onready var status_label: Label = $MarginContainer/MainVBox/StatusLabel
 @onready var mod_list_container: VBoxContainer = $MarginContainer/MainVBox/ModListScroll/ModList
 @onready var local_zip_dialog: FileDialog = $LocalZipFileDialog
+@onready var upgrade_all_btn: Button = $MarginContainer/MainVBox/HeaderHBox/UpdateButton
 
 var conflict_dialog: ConfirmationDialog
 var _current_confirm: Callable
@@ -24,6 +25,7 @@ func initialize_paths(root_dir: String) -> void:
 	# Mapped to the new State Manager functions
 	fetch_button.pressed.connect(state_manager.refresh_mod_list)
 	add_repo_btn.pressed.connect(_on_add_repo_btn_pressed)
+	upgrade_all_btn.pressed.connect(_on_upgrade_all_pressed)
 	
 	# Open the dialog when the button is pressed
 	add_local_btn.pressed.connect(func(): local_zip_dialog.popup_centered_ratio(0.7))
@@ -131,8 +133,35 @@ func _on_conflict_detected(repo: String, conflicts: Array, temp_dir: String) -> 
 func _on_install_completed(repo: String, success: bool) -> void:
 	var row = _get_row(repo)
 	if row:
+		row.install_progress.max_value = 100 # Reset from indeterminate state
 		row.install_progress.visible = false
 		if success:
 			row.set_remote_info(row.latest_version, row.asset_download_url, row.latest_version)
 			row.enable_check.button_pressed = true
 			row.enable_check.disabled = false
+
+
+func _on_upgrade_all_pressed() -> void:
+	# Load the source of truth from disk
+	var state = FileUtiles.load_json(state_manager.data_dir.path_join(AppConfig.MOD_STATE_FILE), {})
+	var updates_started = 0
+	
+	for repo in state.keys():
+		# Skip local ZIPs since they don't have GitHub releases
+		if repo.begins_with("local/"): 
+			continue
+			
+		var mod_data = state[repo]
+		var current_version = mod_data.get("version", "")
+		var remote_version = mod_data.get("remote_version", "")
+		var remote_url = mod_data.get("remote_url", "")
+		
+		# ONLY update if current_version is not empty (meaning it is actually installed)
+		if current_version != "" and current_version != remote_version and remote_version != "" and remote_url != "":
+			state_manager.begin_installation(repo, remote_url, remote_version)
+			updates_started += 1
+			
+	if updates_started == 0:
+		state_manager.status_updated.emit("All installed mods are already up to date.")
+	else:
+		state_manager.status_updated.emit("Started " + str(updates_started) + " updates...")

@@ -49,6 +49,7 @@ func refresh_mod_list() -> void:
 		mod_lists_merged.emit(merged_list, installed_state)
 		
 		_check_updates_for_list(merged_list, installed_state)
+		status_updated.emit("Ready.")
 	)
 
 func add_custom_repo(repo: String) -> void:

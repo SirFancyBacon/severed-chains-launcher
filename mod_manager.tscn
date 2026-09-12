@@ -43,7 +43,7 @@ text = "Add Repo"
 [node name="CustomRepoInput" type="LineEdit" parent="MarginContainer/MainVBox/HeaderHBox" unique_id=1562418950]
 layout_mode = 2
 size_flags_horizontal = 3
-placeholder_text = "githubuser\\repositoryname"
+placeholder_text = "githubuser/repositoryname"
 
 [node name="AddLocalButton" type="Button" parent="MarginContainer/MainVBox/HeaderHBox" unique_id=1507726033]
 custom_minimum_size = Vector2(120, 0)
