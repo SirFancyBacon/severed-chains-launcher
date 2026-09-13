@@ -34,6 +34,7 @@ var pending_update_url: String = ""
 var pending_update_version: String = ""
 var update_progress_dialog: AcceptDialog
 var game_pid: int = -1
+var active_sc_dir: String = ""
 
 
 # --- Lifecycle & Boot ---
@@ -67,6 +68,10 @@ func _initialize_environment() -> void:
 	else:
 		base_dir = OS.get_executable_path().get_base_dir()
 	
+	active_sc_dir = base_dir.path_join(AppConfig.SC_STABLE_DIR)
+	
+	
+	_migrate_legacy_installation() # Remove eventually
 	
 	_setup_token_dialog()
 	_update_token_button_state()
@@ -80,18 +85,18 @@ func _bind_ui_signals() -> void:
 	launch_button.pressed.connect(_on_launch_pressed)
 	launcher_update_btn.pressed.connect(_on_launcher_update_pressed)
 	
-	discord_button.pressed.connect(func(): OS.shell_open("https://discord.gg/rQWXgK5"))
+	discord_button.pressed.connect(func(): OS.shell_open(AppConfig.LOD_FAN_DISCORD))
 	github_button.pressed.connect(func(): OS.shell_open("https://github.com/" + AppConfig.ENGINE_REPO))
 	lod_home_button.pressed.connect(func(): OS.shell_open(AppConfig.LOD_FAN_PAGE))
 	add_token_btn.pressed.connect(_on_add_token_btn_pressed)
 	purge_gamefiles_btn.pressed.connect(_purge_game_installation)
 	
-	issues_discord_button.pressed.connect(func(): OS.shell_open("https://discord.com/channels/307164262063669248/408013767151058946"))
+	issues_discord_button.pressed.connect(func(): OS.shell_open(AppConfig.LOD_FAN_DISCORD_HELP))
 	issues_github_button.pressed.connect(func(): OS.shell_open("https://github.com/" + AppConfig.ENGINE_REPO + "/issues"))
 	issues_launcher_button.pressed.connect(func(): OS.shell_open("https://github.com/" + AppConfig.LAUNCHER_REPO + "/issues"))
 	
-	open_folder_button.pressed.connect(func(): OS.shell_open(base_dir))
-	open_iso_folder_button.pressed.connect(func(): OS.shell_open(base_dir.path_join(AppConfig.ISOS_DIR)))
+	open_folder_button.pressed.connect(func(): OS.shell_open(active_sc_dir))
+	open_iso_folder_button.pressed.connect(func(): OS.shell_open(active_sc_dir.path_join("isos")))
 	
 	setup_guide_pc.pressed.connect(func(): OS.shell_open("https://legendofdragoon.org/guides/setup-severed-chains/"))
 	setup_guide_steam.pressed.connect(func(): OS.shell_open("https://legendofdragoon.org/guides/setup-steamdeck/"))
@@ -183,7 +188,7 @@ func _on_launch_pressed() -> void:
 		return # Prevent execution if already running
 		
 	var script_name = "launch.bat" if OS.has_feature("windows") else "launch"
-	var script_path = base_dir.path_join(script_name)
+	var script_path = active_sc_dir.path_join(script_name)
 
 	if not FileAccess.file_exists(script_path):
 		print("Launch script not found at: ", script_path)
@@ -193,11 +198,12 @@ func _on_launch_pressed() -> void:
 	launch_button.text = "Running..."
 
 	if OS.has_feature("windows"):
-		var cmd_string = 'cd /d "%s" && launch.bat' % base_dir
+		var cmd_string = 'cd /d "%s" && launch.bat' % active_sc_dir
 		game_pid = OS.create_process("cmd.exe", ["/c", cmd_string])
 	else:
 		FileAccess.set_unix_permissions(script_path, 493)
-		game_pid = OS.create_process("/bin/bash", [script_path])
+		var output = []
+		game_pid = OS.execute("bash", ["-c", 'cd "%s" && ./launch' % active_sc_dir], output, false)
 
 	if game_pid != -1:
 		_start_process_monitor()
@@ -225,7 +231,7 @@ func _start_process_monitor() -> void:
 
 func _check_engine_installed() -> void:
 	var script_name = "launch.bat" if OS.has_feature("windows") else "launch"
-	if FileAccess.file_exists(base_dir.path_join(script_name)):
+	if FileAccess.file_exists(active_sc_dir.path_join(script_name)):
 		sc_install_btn.visible = false
 	else:
 		sc_install_btn.visible = true
@@ -251,7 +257,7 @@ func _start_engine_install() -> void:
 		sc_install_btn.text = "Downloading engine..."
 		_download_asset(asset_url, func(body):
 			sc_install_btn.text = "Extracting..."
-			ModExtractor.begin_root_extraction(body, asset_url, base_dir, _finalize_engine_install)
+			ModExtractor.begin_root_extraction(body, asset_url, active_sc_dir, _finalize_engine_install)
 		)
 	)
 
@@ -683,8 +689,10 @@ func _setup_update_dialog() -> void:
 
 # --- Severed Chains Rebuild ---
 func _purge_game_installation() -> void:
-	var safe_folders = ["isos", "mods", "mod_manager_data", "saves"]
-	var dir = DirAccess.open(base_dir)
+	if not DirAccess.dir_exists_absolute(active_sc_dir): return
+	
+	var safe_folders = ["isos", "mods", "saves"]
+	var dir = DirAccess.open(active_sc_dir)
 	if not dir: return
 	
 	dir.list_dir_begin()
@@ -692,19 +700,11 @@ func _purge_game_installation() -> void:
 	
 	while file_name != "":
 		if file_name != "." and file_name != "..":
-			var is_safe = false
-			
-			if dir.current_is_dir():
-				# Protect user data directories
-				if file_name in safe_folders:
-					is_safe = true
+			# Only protect the user's game data. Wipe everything else (Java, configs, JARs).
+			if dir.current_is_dir() and file_name in safe_folders:
+				pass # Keep it safe
 			else:
-				# Protect the launcher binaries and Godot PCK archives
-				if file_name.begins_with("severed-chains-launcher") or file_name.ends_with(".pck"):
-					is_safe = true
-					
-			if not is_safe:
-				var target_path = base_dir.path_join(file_name)
+				var target_path = active_sc_dir.path_join(file_name)
 				if dir.current_is_dir():
 					FileUtiles.remove_dir_recursive(target_path)
 				else:
@@ -714,3 +714,45 @@ func _purge_game_installation() -> void:
 		
 	# Refresh the UI state to expose the "Install Severed Chains" button again
 	_check_engine_installed()
+
+
+# --- Delete eventually ---
+func _migrate_legacy_installation() -> void:
+	# Prevent catastrophic file moves if you are testing inside the Godot editor
+	if OS.has_feature("editor"):
+		return
+		
+	# Trigger migration only if the legacy script exists in the root
+	var legacy_bat = base_dir.path_join("launch.bat")
+	var legacy_sh = base_dir.path_join("launch")
+	
+	if not FileAccess.file_exists(legacy_bat) and not FileAccess.file_exists(legacy_sh):
+		return 
+		
+	print("Migrating legacy Severed Chains installation to new structure...")
+	DirAccess.make_dir_recursive_absolute(active_sc_dir)
+	
+	var dir = DirAccess.open(base_dir)
+	if not dir: return
+	
+	# Define exactly what stays in the root directory
+	var exclusions = [
+		".", "..", 
+		AppConfig.MOD_DATA_DIR, 
+		AppConfig.SC_STABLE_DIR
+	]
+	
+	dir.list_dir_begin()
+	var item_name = dir.get_next()
+	
+	while item_name != "":
+		# Leave any OS variant of the launcher binary alone (e.g. .exe, .pck, .x86_64)
+		var is_launcher_binary = item_name.begins_with("severed-chains-launcher")
+		
+		if not (item_name in exclusions) and not is_launcher_binary:
+			var src = base_dir.path_join(item_name)
+			var dst = active_sc_dir.path_join(item_name)
+			
+			DirAccess.rename_absolute(src, dst)
+			
+		item_name = dir.get_next()

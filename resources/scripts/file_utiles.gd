@@ -180,10 +180,11 @@ static func validate_iso_directory(base_dir: String) -> Dictionary:
 # Reads the current GPU preference directly from the host operating system
 # Returns: 1 (Discrete), 2 (Integrated), or 0 (Auto/None)
 static func get_system_gpu_preference(base_dir: String) -> int:
+	var sc_dir = base_dir.path_join(AppConfig.SC_STABLE_DIR)
 	if OS.has_feature("windows"):
-		var java_path = base_dir.path_join("jdk25/bin/java.exe")
+		var java_path = sc_dir.path_join("jdk25/bin/java.exe")
 		if not FileAccess.file_exists(java_path):
-			java_path = base_dir.path_join("jdk25/bin/javaw.exe")
+			java_path = sc_dir.path_join("jdk25/bin/javaw.exe")
 			
 		var win_java_path = ProjectSettings.globalize_path(java_path).replace("/", "\\")
 		var output = []
@@ -203,7 +204,7 @@ static func get_system_gpu_preference(base_dir: String) -> int:
 		
 	else:
 		# Linux/Unix fallback reads the launch config
-		var conf_path = base_dir.path_join("launch.conf")
+		var conf_path = sc_dir.path_join("launch.conf")
 		return read_config_value(conf_path, "GPU_PREFERENCE", "0").to_int()
 
 # Maps the launcher's UI preference to the Windows DirectX GPU Shim
@@ -212,9 +213,10 @@ static func apply_windows_gpu_registry(preference: int, base_dir: String) -> voi
 	if not OS.has_feature("windows"):
 		return
 	
-	var java_path = base_dir.path_join("jdk25/bin/java.exe")
+	var sc_dir = base_dir.path_join(AppConfig.SC_STABLE_DIR)
+	var java_path = sc_dir.path_join("jdk25/bin/java.exe")
 	if not FileAccess.file_exists(java_path):
-		java_path = base_dir.path_join("jdk25/bin/javaw.exe")
+		java_path = sc_dir.path_join("jdk25/bin/javaw.exe")
 		
 	# The Windows 'reg' command strictly requires backslashes
 	var win_java_path = ProjectSettings.globalize_path(java_path).replace("/", "\\")
