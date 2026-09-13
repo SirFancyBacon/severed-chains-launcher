@@ -231,19 +231,23 @@ alignment = 1
 [node name="ReportIssueSCGithub" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/IssuesHBox" unique_id=381655271]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
+tooltip_text = "Report issues with Severed Chains"
 text = "Severed Chains
 Github"
 
 [node name="ReportIssuesLoDDiscord" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/IssuesHBox" unique_id=2146957291]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
-tooltip_text = "#player-help channel on LoD Discord"
+tooltip_text = "#player-help channel
+in LoD Community Discord."
 text = "Player Help
 on LoD Discord"
 
 [node name="ReportIssuesLauncher" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/IssuesHBox" unique_id=602801494]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
+tooltip_text = "Report issues related to:
+SC Launcher or Mod Manager."
 text = "Launcher Issues"
 
 [node name="FileUtilsLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=1715246627]
@@ -270,6 +274,7 @@ Directory"
 [node name="OpenGameIsoDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/FileUtilsHBox" unique_id=1072695004]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
+tooltip_text = "Place your PS1 disc images in this folder."
 text = "Open isos
 Directory"
 
@@ -280,9 +285,12 @@ size_flags_horizontal = 3
 tooltip_text = "Deletes everything in the directory the launcher is in.
 It spares the following folders:
 isos, mods, saves, mod_manager_data
-"
-text = "Purge
-Severed Chains"
+------------------------------------------------------
+**EVERYTHING ELSE IS DELETED.**
+------------------------------------------------------
+Use with caution."
+text = "Severed Chains
+Data Purge"
 
 [node name="SetupGuidesLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=1746596524]
 layout_mode = 2
