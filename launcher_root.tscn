@@ -218,6 +218,7 @@ text = "Report Issues"
 horizontal_alignment = 1
 
 [node name="IssuesHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=859617944]
+custom_minimum_size = Vector2(160, 65)
 layout_mode = 2
 theme_override_constants/separation = 8
 alignment = 1
@@ -247,24 +248,36 @@ text = "File Utilities"
 horizontal_alignment = 1
 
 [node name="FileUtilsHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=926987522]
+custom_minimum_size = Vector2(160, 65)
 layout_mode = 2
-
-[node name="FrontSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox" unique_id=246084489]
-custom_minimum_size = Vector2(125, 0)
-layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 3
+theme_override_constants/separation = 8
 
 [node name="OpenGameDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox" unique_id=1970393987]
-custom_minimum_size = Vector2(175, 0)
+custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 tooltip_text = "Launcher,  debug.log, and game files."
 text = "Open Game 
 Directory"
 
 [node name="OpenGameIsoDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox" unique_id=1072695004]
-custom_minimum_size = Vector2(175, 0)
+custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 text = "Open isos
 Directory"
+
+[node name="PurgeGameFiles" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox" unique_id=1059123852]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Deletes everything in the directory the launcher is in.
+It spares the following folders:
+isos, mods, saves, mod_manager_data
+"
+text = "Purge
+Severed Chains"
 
 [node name="SetupGuidesLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=1746596524]
 layout_mode = 2

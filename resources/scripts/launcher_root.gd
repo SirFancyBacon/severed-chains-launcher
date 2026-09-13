@@ -25,12 +25,15 @@ var ready_update_path: String = ""
 @onready var mod_manager: Control = $"MarginContainer/MainHBox/LeftColumn/TabContainer/Mod Manager/ModManager"
 @onready var gpu_option_btn: OptionButton = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/GPUHBox/OptionButton
 @onready var add_token_btn: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/AddGitTokenButton
+@onready var purge_gamefiles_btn: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox/PurgeGameFiles
+
 
 var token_dialog: ConfirmationDialog
 var token_input: LineEdit
 var pending_update_url: String = ""
 var pending_update_version: String = ""
 var update_progress_dialog: AcceptDialog
+var game_pid: int = -1
 
 
 # --- Lifecycle & Boot ---
@@ -81,6 +84,7 @@ func _bind_ui_signals() -> void:
 	github_button.pressed.connect(func(): OS.shell_open("https://github.com/" + AppConfig.ENGINE_REPO))
 	lod_home_button.pressed.connect(func(): OS.shell_open(AppConfig.LOD_FAN_PAGE))
 	add_token_btn.pressed.connect(_on_add_token_btn_pressed)
+	purge_gamefiles_btn.pressed.connect(_purge_game_installation)
 	
 	issues_discord_button.pressed.connect(func(): OS.shell_open("https://discord.com/channels/307164262063669248/408013767151058946"))
 	issues_github_button.pressed.connect(func(): OS.shell_open("https://github.com/" + AppConfig.ENGINE_REPO + "/issues"))
@@ -175,6 +179,9 @@ func _on_gpu_preference_changed(index: int) -> void:
 # --- Game Launch Execution ---
 
 func _on_launch_pressed() -> void:
+	if game_pid != -1 and OS.is_process_running(game_pid):
+		return # Prevent execution if already running
+		
 	var script_name = "launch.bat" if OS.has_feature("windows") else "launch"
 	var script_path = base_dir.path_join(script_name)
 
@@ -182,16 +189,36 @@ func _on_launch_pressed() -> void:
 		print("Launch script not found at: ", script_path)
 		return
 
-	var pid = -1
+	launch_button.disabled = true
+	launch_button.text = "Running..."
+
 	if OS.has_feature("windows"):
 		var cmd_string = 'cd /d "%s" && launch.bat' % base_dir
-		pid = OS.create_process("cmd.exe", ["/c", cmd_string])
+		game_pid = OS.create_process("cmd.exe", ["/c", cmd_string])
 	else:
 		FileAccess.set_unix_permissions(script_path, 493)
-		pid = OS.create_process("/bin/bash", [script_path])
+		game_pid = OS.create_process("/bin/bash", [script_path])
 
-	if pid == -1:
+	if game_pid != -1:
+		_start_process_monitor()
+	else:
+		launch_button.disabled = false
+		launch_button.text = "Launch"
 		print("Failed to launch game process.")
+
+func _start_process_monitor() -> void:
+	var monitor = Timer.new()
+	monitor.wait_time = 2.0
+	add_child(monitor)
+	
+	monitor.timeout.connect(func():
+		if not OS.is_process_running(game_pid):
+			launch_button.disabled = false
+			launch_button.text = "Launch"
+			game_pid = -1
+			monitor.queue_free()
+	)
+	monitor.start()
 
 
 # --- Severed Chains Engine Installer ---
@@ -652,3 +679,38 @@ func _setup_update_dialog() -> void:
 	var ok_btn = update_progress_dialog.get_ok_button()
 	if ok_btn:
 		ok_btn.hide()
+
+
+# --- Severed Chains Rebuild ---
+func _purge_game_installation() -> void:
+	var safe_folders = ["isos", "mods", "mod_manager_data", "saves"]
+	var dir = DirAccess.open(base_dir)
+	if not dir: return
+	
+	dir.list_dir_begin()
+	var file_name = dir.get_next()
+	
+	while file_name != "":
+		if file_name != "." and file_name != "..":
+			var is_safe = false
+			
+			if dir.current_is_dir():
+				# Protect user data directories
+				if file_name in safe_folders:
+					is_safe = true
+			else:
+				# Protect the launcher binaries and Godot PCK archives
+				if file_name.begins_with("severed-chains-launcher") or file_name.ends_with(".pck"):
+					is_safe = true
+					
+			if not is_safe:
+				var target_path = base_dir.path_join(file_name)
+				if dir.current_is_dir():
+					FileUtiles.remove_dir_recursive(target_path)
+				else:
+					DirAccess.remove_absolute(target_path)
+					
+		file_name = dir.get_next()
+		
+	# Refresh the UI state to expose the "Install Severed Chains" button again
+	_check_engine_installed()
