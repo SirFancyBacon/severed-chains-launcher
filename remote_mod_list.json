@@ -22,12 +22,12 @@
   {
 	"repo": "Ink230/irongoon",
 	"name": "Iron Goon",
-	"description": "Character, Monster, Shop, and Stage randomizer with lots of options./NFuture plan to replicate 'Iron'-style playthroughs as more modding APIs become available."
+	"description": "Character, Monster, Shop, and Stage randomizer with lots of options.\nFuture plan to replicate 'Iron'-style playthroughs as more modding APIs become available."
   },
   {
 	"repo": "Legend-of-Dragoon-Modding/sc-dragoon-modifier",
 	"name": "Dragoon Modifier",
-	"description": "Dragoon Modifier is a simple tool that anyone can use with a spreadsheet editor to make their own custom difficulties. It comes with my prepackaged difficulty preset with additional mods. See Readme.md"
+	"description": "Dragoon Modifier is a simple tool that anyone can use with a spreadsheet editor to make their own custom difficulties. It comes with my prepackaged difficulty preset with additional mods.\nSee Readme.md"
   },
   {
 	"repo": "DennytXVII/BattleRewardsMod",
@@ -42,7 +42,7 @@
   {
 	"repo": "Popoto-anonymous/SC-ELEMENTALWEAPONS",
 	"name": "Elemental Weapons",
-	"description": "Adds elemental weapons for each character. See Readme.md"
+	"description": "Adds elemental weapons for each character.\nSee Readme.md"
   },
   {
 	"repo": "Popoto-anonymous/EverDragon-Gear",
@@ -52,6 +52,6 @@
   {
 	"repo": "Popoto-anonymous/SC-SPGear",
 	"name": "SP Gear",
-	"description": "A set of weapons (and other stuff) focused on helping you grind. See Readme.md"
+	"description": "A set of weapons (and other stuff) focused on helping you grind.\nSee Readme.md"
   }
 ]

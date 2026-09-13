@@ -22,7 +22,7 @@ func _ready() -> void:
 	update_btn.pressed.connect(_on_update_button_pressed)
 	uninstall_btn.pressed.connect(_on_uninstall_button_pressed)
 
-func setup(repo: String, current_version: String, is_enabled: bool, display_name: String = "") -> void:
+func setup(repo: String, current_version: String, is_enabled: bool, display_name: String = "", description: String = "") -> void:
 	repo_id = repo
 	
 	if not display_name.is_empty():
@@ -30,7 +30,13 @@ func setup(repo: String, current_version: String, is_enabled: bool, display_name
 	else:
 		var parts = repo.split("/")
 		name_label.text = parts[1] if parts.size() > 1 else repo
-		
+	
+	# Apply the description tooltip
+	if not description.is_empty():
+		name_label.tooltip_text = _format_tooltip(description, 60)
+	else:
+		name_label.tooltip_text = "No description provided."
+	
 	version_label.text = current_version if current_version != "" else "N/A"
 	enable_check.button_pressed = is_enabled
 	enable_check.disabled = (current_version == "")
@@ -38,6 +44,28 @@ func setup(repo: String, current_version: String, is_enabled: bool, display_name
 	install_progress.visible = false
 	uninstall_btn.visible = false
 	status_label.text = "Checking..."
+
+
+func _format_tooltip(text: String, max_line_length: int) -> String:
+	# Convert escaped JSON newlines into actual Godot newlines
+	var clean_text = text.replace("\\n", "\n")
+	var lines = clean_text.split("\n")
+	var final_text = ""
+	
+	for line in lines:
+		var words = line.split(" ")
+		var current_line = ""
+		
+		for word in words:
+			if current_line.length() + word.length() > max_line_length:
+				final_text += current_line.strip_edges() + "\n"
+				current_line = ""
+			current_line += word + " "
+		
+		final_text += current_line.strip_edges() + "\n"
+		
+	return final_text.strip_edges()
+
 
 func set_remote_info(tag: String, download_url: String, installed_version: String) -> void:
 	install_progress.visible = false

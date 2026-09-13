@@ -71,8 +71,6 @@ func _on_mod_lists_merged(merged_list: Array, installed_data: Dictionary) -> voi
 		
 	var remote_path = state_manager.data_dir.path_join(AppConfig.REMOTE_LIST_FILE)
 	var remote_list = FileUtiles.load_json(remote_path, [])
-	print("DEBUG MANAGER: Remote list path -> ", remote_path)
-	print("DEBUG MANAGER: Remote list loaded count -> ", remote_list.size())
 		
 	for repo in merged_list:
 		var mod_data = installed_data.get(repo, {})
@@ -80,25 +78,27 @@ func _on_mod_lists_merged(merged_list: Array, installed_data: Dictionary) -> voi
 		var is_enabled = mod_data.get("enabled", false)
 		
 		var display_name = mod_data.get("display_name", "")
-		if display_name.is_empty():
+		var description = mod_data.get("description", "")
+		
+		# If either string is empty, fallback to the remote list metadata
+		if display_name.is_empty() or description.is_empty():
 			for entry in remote_list:
-				print("DEBUG TYPE: typeof(entry) = ", typeof(entry), " | Value: ", entry)
 				if entry is Dictionary:
 					var entry_repo = String(entry.get("repo", "")).strip_edges()
 					var target_repo = String(repo).strip_edges()
 					if entry_repo == target_repo:
-						display_name = String(entry.get("name", "")).strip_edges()
-						print("SUCCESS: Matched! Name -> ", display_name)
+						if display_name.is_empty():
+							display_name = String(entry.get("name", "")).strip_edges()
+						if description.is_empty():
+							description = String(entry.get("description", "")).strip_edges()
 						break
-				else:
-					print("WARNING: Entry is NOT a dictionary! It is: ", entry)
 			
-		_spawn_mod_row(repo, cur_version, is_enabled, display_name)
+		_spawn_mod_row(repo, cur_version, is_enabled, display_name, description)
 
-func _spawn_mod_row(repo: String, current_version: String, is_enabled: bool, display_name: String = "") -> void:
+func _spawn_mod_row(repo: String, current_version: String, is_enabled: bool, display_name: String = "", description: String = "") -> void:
 	var row = MOD_ROW_SCENE.instantiate()
 	mod_list_container.add_child(row)
-	row.setup(repo, current_version, is_enabled, display_name)
+	row.setup(repo, current_version, is_enabled, display_name, description)
 	
 	row.update_requested.connect(func(r, url, version): state_manager.begin_installation(r, url, version))
 	row.enable_toggled.connect(func(r, enabled): state_manager.toggle_mod_enabled(r, enabled))
