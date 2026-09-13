@@ -8,24 +8,24 @@ var ready_update_path: String = ""
 @onready var launcher_update_btn: Button = $MarginContainer/MainHBox/LeftColumn/HeaderHBox/LauncherUpdateButton
 @onready var news_container: VBoxContainer = $MarginContainer/MainHBox/LeftColumn/TabContainer/News/ScrollContainer/RSSFeedList
 @onready var changelog_container: VBoxContainer = $"MarginContainer/MainHBox/LeftColumn/TabContainer/SC Changelog/ScrollContainer/ChangeLogList"
+@onready var mod_manager: Control = $"MarginContainer/MainHBox/LeftColumn/TabContainer/Mod Manager/ModManager"
+@onready var issues_discord_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/IssuesHBox/ReportIssuesLoDDiscord
+@onready var issues_github_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/IssuesHBox/ReportIssueSCGithub
+@onready var issues_launcher_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/IssuesHBox/ReportIssuesLauncher
+@onready var open_folder_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/FileUtilsHBox/OpenGameDir
+@onready var open_iso_folder_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/FileUtilsHBox/OpenGameIsoDir
+@onready var setup_guide_pc: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/SetupGuidesHBox/OpenSetupGuidePC
+@onready var setup_guide_steam: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/SetupGuidesHBox/OpenSetupGuideSD
+@onready var gpu_option_btn: OptionButton = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/GPUHBox/OptionButton
+@onready var add_token_btn: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/AddGitTokenButton
+@onready var purge_gamefiles_btn: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/FileUtilsHBox/PurgeGameFiles
 @onready var launch_button: Button = $MarginContainer/MainHBox/RightColumn/LaunchButton
 @onready var sc_install_btn: Button = $MarginContainer/MainHBox/RightColumn/InstallSCButton
 @onready var discord_button: TextureButton = $MarginContainer/MainHBox/RightColumn/SocialsHBox/DiscordButton
 @onready var github_button: TextureButton = $MarginContainer/MainHBox/RightColumn/SocialsHBox/GithubButton
 @onready var lod_home_button: TextureButton = $MarginContainer/MainHBox/RightColumn/Logo
-@onready var issues_discord_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/IssuesHBox/ReportIssuesSCDiscord
-@onready var issues_github_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/IssuesHBox/ReportIssueSCGithub
-@onready var issues_launcher_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/IssuesHBox/ReportIssuesLauncher
-@onready var open_folder_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox/OpenGameDir
-@onready var open_iso_folder_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox/OpenGameIsoDir
-@onready var setup_guide_pc: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/SetupGuidesHBox/OpenSetupGuidePC
-@onready var setup_guide_steam: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/SetupGuidesHBox/OpenSetupGuideSD
 @onready var iso_dialog: AcceptDialog = $AcceptDialog
 @onready var rss_http: HTTPRequest = $RSSRequest
-@onready var mod_manager: Control = $"MarginContainer/MainHBox/LeftColumn/TabContainer/Mod Manager/ModManager"
-@onready var gpu_option_btn: OptionButton = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/GPUHBox/OptionButton
-@onready var add_token_btn: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/AddGitTokenButton
-@onready var purge_gamefiles_btn: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox/PurgeGameFiles
 
 
 var token_dialog: ConfirmationDialog

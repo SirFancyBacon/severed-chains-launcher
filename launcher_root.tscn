@@ -174,25 +174,30 @@ layout_mode = 2
 [node name="Optional" type="MarginContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer" unique_id=996537095]
 visible = false
 layout_mode = 2
-theme_override_constants/margin_left = 60
-theme_override_constants/margin_top = 15
-theme_override_constants/margin_right = 60
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 metadata/_tab_index = 3
 metadata/_tab_name = "  Misc  "
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional" unique_id=521461937]
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional" unique_id=1103588557]
 layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer" unique_id=521461937]
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="GPUHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=225745252]
+[node name="GPUHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=225745252]
 layout_mode = 2
 
-[node name="FrontSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/GPUHBox" unique_id=1696901849]
+[node name="FrontSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/GPUHBox" unique_id=1696901849]
 custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
 
-[node name="Label" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/GPUHBox" unique_id=1298999563]
+[node name="Label" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/GPUHBox" unique_id=1298999563]
 layout_mode = 2
 size_flags_horizontal = 3
 tooltip_text = "For computers with two graphics cards (like gaming laptops). 
@@ -201,60 +206,60 @@ or the basic one to save battery."
 mouse_filter = 1
 text = "Laptop GPU Preferences"
 
-[node name="OptionButton" type="OptionButton" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/GPUHBox" unique_id=1416098286]
+[node name="OptionButton" type="OptionButton" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/GPUHBox" unique_id=1416098286]
 layout_mode = 2
 tooltip_text = "For computers with two graphics cards (like gaming laptops). 
 Use this to force the game to run on your powerful graphics card for the best performance, 
 or the basic one to save battery."
 
-[node name="EndSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/GPUHBox" unique_id=1522740028]
+[node name="EndSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/GPUHBox" unique_id=1522740028]
 custom_minimum_size = Vector2(50, 0)
 layout_mode = 2
 
-[node name="ReportIssuesLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=896702358]
+[node name="ReportIssuesLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=896702358]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Report Issues"
 horizontal_alignment = 1
 
-[node name="IssuesHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=859617944]
-custom_minimum_size = Vector2(160, 65)
+[node name="IssuesHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=859617944]
+custom_minimum_size = Vector2(160, 52)
 layout_mode = 2
 theme_override_constants/separation = 8
 alignment = 1
 
-[node name="ReportIssueSCGithub" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/IssuesHBox" unique_id=381655271]
+[node name="ReportIssueSCGithub" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/IssuesHBox" unique_id=381655271]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 text = "Severed Chains
 Github"
 
-[node name="ReportIssuesSCDiscord" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/IssuesHBox" unique_id=2146957291]
+[node name="ReportIssuesLoDDiscord" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/IssuesHBox" unique_id=2146957291]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 tooltip_text = "#player-help channel on LoD Discord"
 text = "Player Help
 on LoD Discord"
 
-[node name="ReportIssuesLauncher" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/IssuesHBox" unique_id=602801494]
+[node name="ReportIssuesLauncher" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/IssuesHBox" unique_id=602801494]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 text = "Launcher Issues"
 
-[node name="FileUtilsLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=1715246627]
+[node name="FileUtilsLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=1715246627]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "File Utilities"
 horizontal_alignment = 1
 
-[node name="FileUtilsHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=926987522]
-custom_minimum_size = Vector2(160, 65)
+[node name="FileUtilsHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=926987522]
+custom_minimum_size = Vector2(160, 52)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="OpenGameDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox" unique_id=1970393987]
+[node name="OpenGameDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/FileUtilsHBox" unique_id=1970393987]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -262,13 +267,13 @@ tooltip_text = "Launcher,  debug.log, and game files."
 text = "Open Game 
 Directory"
 
-[node name="OpenGameIsoDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox" unique_id=1072695004]
+[node name="OpenGameIsoDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/FileUtilsHBox" unique_id=1072695004]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 text = "Open isos
 Directory"
 
-[node name="PurgeGameFiles" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/FileUtilsHBox" unique_id=1059123852]
+[node name="PurgeGameFiles" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/FileUtilsHBox" unique_id=1059123852]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -279,20 +284,21 @@ isos, mods, saves, mod_manager_data
 text = "Purge
 Severed Chains"
 
-[node name="SetupGuidesLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=1746596524]
+[node name="SetupGuidesLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=1746596524]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Setup Guides"
 horizontal_alignment = 1
 
-[node name="SetupGuidesHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=67403560]
+[node name="SetupGuidesHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=67403560]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="FrontSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/SetupGuidesHBox" unique_id=1845912729]
+custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 
-[node name="FrontSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/SetupGuidesHBox" unique_id=898001319]
-custom_minimum_size = Vector2(125, 0)
-layout_mode = 2
-
-[node name="OpenSetupGuidePC" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/SetupGuidesHBox" unique_id=1704636904]
+[node name="OpenSetupGuidePC" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/SetupGuidesHBox" unique_id=1704636904]
 custom_minimum_size = Vector2(175, 0)
 layout_mode = 2
 tooltip_text = "If running on 
@@ -301,7 +307,7 @@ Start here"
 text = "Windows
 Linux/Mac"
 
-[node name="OpenSetupGuideSD" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer/SetupGuidesHBox" unique_id=129422021]
+[node name="OpenSetupGuideSD" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/SetupGuidesHBox" unique_id=129422021]
 custom_minimum_size = Vector2(175, 0)
 layout_mode = 2
 tooltip_text = "If running on 
@@ -309,7 +315,7 @@ SteamDeck
 Start here"
 text = "SteamDeck"
 
-[node name="AddGitTokenButton" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/VBoxContainer" unique_id=527613026]
+[node name="AddGitTokenButton" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=527613026]
 layout_mode = 2
 tooltip_text = "Add a Github token.
 Prevents 403 limit error
