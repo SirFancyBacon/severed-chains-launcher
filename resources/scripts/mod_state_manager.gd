@@ -20,10 +20,24 @@ func initialize_paths(root_dir: String) -> void:
 	data_dir = base_dir.path_join(AppConfig.MOD_DATA_DIR)
 	cache_dir = base_dir.path_join(AppConfig.MOD_CACHE_DIR)
 	game_mods_dir = base_dir.path_join(AppConfig.GAME_MODS_DIR)
-	backups_dir = base_dir.path_join(AppConfig.BACKUPS_DIR)
 	
 	for dir in [data_dir, cache_dir, game_mods_dir, backups_dir]:
 		DirAccess.make_dir_recursive_absolute(dir)
+		
+	_purge_legacy_systems()
+
+func _purge_legacy_systems() -> void:
+	var old_disabled = base_dir.path_join("disabled_mods")
+	if DirAccess.dir_exists_absolute(old_disabled):
+		FileUtiles.remove_dir_recursive(old_disabled)
+		
+	for d_path in [base_dir.path_join("downloads"), data_dir.path_join("downloads")]:
+		if DirAccess.dir_exists_absolute(d_path):
+			FileUtiles.remove_dir_recursive(d_path)
+			
+	var old_list = data_dir.path_join("official_mod_list.json")
+	if FileAccess.file_exists(old_list):
+		DirAccess.remove_absolute(old_list)
 
 # --- Dual-List Synchronization ---
 
@@ -32,7 +46,6 @@ func refresh_mod_list() -> void:
 	
 	networker.fetch_official_list(func(remote_list: Array):
 		var remote_path = data_dir.path_join(AppConfig.REMOTE_LIST_FILE)
-		
 		if not remote_list.is_empty():
 			FileUtiles.save_json(remote_path, remote_list)
 			
@@ -40,9 +53,8 @@ func refresh_mod_list() -> void:
 		var custom_list = FileUtiles.load_json(custom_path, [])
 		
 		var merged_list: Array = []
-		# Handle both raw strings (legacy) and dictionaries (hybrid metadata)
 		for entry in remote_list:
-			var repo_name = entry.get("repo", "") if entry is Dictionary else entry
+			var repo_name = entry.get("repo", "") if entry is Dictionary else String(entry)
 			if not repo_name.is_empty() and not merged_list.has(repo_name):
 				merged_list.append(repo_name)
 				
@@ -93,12 +105,9 @@ func _check_updates_for_list(merged_list: Array, installed_state: Dictionary) ->
 		networker.fetch_mod_release(repo, saved_etag, func(code, data, new_etag):
 			if code == 200:
 				var tag = data.get("tag_name", "")
-				
-				# 1. Fallback to the auto-generated source zip if no assets exist
 				var url = data.get("zipball_url", "") 
 				var assets = data.get("assets", [])
 				
-				# 2. If they did upload a custom zip, override the fallback
 				if not assets.is_empty():
 					url = assets[0].get("browser_download_url", url)
 				
@@ -119,7 +128,6 @@ func _check_updates_for_list(merged_list: Array, installed_state: Dictionary) ->
 
 func begin_installation(repo: String, url: String, version: String) -> void:
 	status_updated.emit("Downloading " + repo.split("/")[1] + "...")
-	
 	networker.download_asset(repo, url, func(success: bool, body: PackedByteArray):
 		if not success:
 			status_updated.emit("Download failed for " + repo)
@@ -143,7 +151,6 @@ func install_local_zip(zip_path: String) -> void:
 	var temp_dir = data_dir.path_join("temp_extract").path_join(file_name)
 	
 	status_updated.emit("Extracting local zip...")
-	
 	ModExtractor.begin_local_extraction(zip_path, temp_dir, func(_r, _v, _i, msg, extract_ok):
 		if not extract_ok: 
 			call_deferred("emit_signal", "status_updated", "Error: " + msg)
@@ -164,50 +171,36 @@ func _execute_conflict_scan(repo: String, version: String, temp_dir: String) -> 
 func _resolve_mod_display_name(repo: String, target_cache: String) -> String:
 	var local_meta_path = target_cache.path_join("sc_mod.json")
 	if FileAccess.file_exists(local_meta_path):
-		var meta = FileUtiles.load_json(local_meta_path, {})
-		var custom_name = meta.get("name", "")
-		if not custom_name.is_empty():
-			print("DEBUG: Found local sc_mod.json name -> ", custom_name)
-			return custom_name
+		var custom_name = FileUtiles.load_json(local_meta_path, {}).get("name", "")
+		if not custom_name.is_empty(): return custom_name
 			
-	var remote_path = data_dir.path_join(AppConfig.REMOTE_LIST_FILE)
-	var remote_list = FileUtiles.load_json(remote_path, [])
-	print("DEBUG: Loaded remote list, entries count: ", remote_list.size())
-	
-	for entry in remote_list:
-		if entry is Dictionary:
-			var entry_repo = entry.get("repo", "")
-			print("DEBUG: Comparing entry repo '", entry_repo, "' with target '", repo, "'")
-			if entry_repo == repo:
-				var remote_name = entry.get("name", "")
-				print("DEBUG: Match found! Remote name -> ", remote_name)
-				if not remote_name.is_empty():
-					return remote_name
+	for entry in FileUtiles.load_json(data_dir.path_join(AppConfig.REMOTE_LIST_FILE), []):
+		if entry is Dictionary and String(entry.get("repo", "")).strip_edges() == String(repo).strip_edges():
+			var remote_name = String(entry.get("name", "")).strip_edges()
+			if not remote_name.is_empty(): return remote_name
 				
 	var parts = repo.split("/")
-	print("DEBUG: No match found, falling back to repo name -> ", parts[1] if parts.size() > 1 else repo)
 	return parts[1] if parts.size() > 1 else repo
 
 func resolve_installation(repo: String, version: String, temp_dir: String, overwrite: bool) -> void:
-	status_updated.emit("Committing files...")
 	var target_cache = cache_dir.path_join(repo.split("/")[1])
+	var pre_state = FileUtiles.load_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), {})
+	var display_name = _resolve_mod_display_name(repo, temp_dir)
 	
-	ThreadedFileIO.commit_install_async(temp_dir, target_cache, game_mods_dir, overwrite, func(items: Array):
+	status_updated.emit("Committing files asynchronously...")
+	
+	# Pass all file duties to ThreadedFileIO, including purging the old files
+	ThreadedFileIO.commit_install_async(repo, display_name, temp_dir, target_cache, game_mods_dir, overwrite, pre_state, func(items: Array):
 		var state = FileUtiles.load_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), {})
 		if not state.has(repo): state[repo] = {}
 		
-		# Evaluate display name using the priority hierarchy
-		var display_name = _resolve_mod_display_name(repo, target_cache)
-		
-		# Grab description with similar fallback safety
 		var description = "No description provided."
 		var local_meta_path = target_cache.path_join("sc_mod.json")
 		if FileAccess.file_exists(local_meta_path):
 			description = FileUtiles.load_json(local_meta_path, {}).get("description", description)
 		else:
-			var remote_list = FileUtiles.load_json(data_dir.path_join(AppConfig.REMOTE_LIST_FILE), [])
-			for entry in remote_list:
-				if entry is Dictionary and entry.get("repo", "") == repo:
+			for entry in FileUtiles.load_json(data_dir.path_join(AppConfig.REMOTE_LIST_FILE), []):
+				if entry is Dictionary and String(entry.get("repo", "")).strip_edges() == String(repo).strip_edges():
 					description = entry.get("description", description)
 					break
 		
@@ -216,7 +209,6 @@ func resolve_installation(repo: String, version: String, temp_dir: String, overw
 		state[repo]["enabled"] = true
 		state[repo]["display_name"] = display_name
 		state[repo]["description"] = description
-		
 		FileUtiles.save_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), state)
 		
 		status_updated.emit("Installed: " + display_name)
@@ -230,15 +222,17 @@ func toggle_mod_enabled(repo: String, is_enabled: bool) -> void:
 	var state = FileUtiles.load_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), {})
 	if not state.has(repo): return
 		
-	state[repo]["enabled"] = is_enabled
-	FileUtiles.save_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), state)
-	
 	var items = state[repo].get("items", [])
-	var target_cache = cache_dir.path_join(repo.split("/")[1])
 	var mod_name = repo.split("/")[1]
+	var display_name = state[repo].get("display_name", mod_name)
+	var target_cache = cache_dir.path_join(mod_name)
 	
 	status_updated.emit("Applying changes to " + mod_name + "...")
-	ThreadedFileIO.toggle_mod_async(target_cache, game_mods_dir, items, is_enabled, func():
+	
+# In mod_state_manager.gd -> toggle_mod_enabled()
+	ThreadedFileIO.toggle_mod_async(mod_name, display_name, target_cache, game_mods_dir, items, is_enabled, func():
+		state[repo]["enabled"] = is_enabled
+		FileUtiles.save_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), state)
 		status_updated.emit(mod_name + (" enabled." if is_enabled else " disabled."))
 	)
 
@@ -247,11 +241,13 @@ func uninstall_mod(repo: String) -> void:
 	if not state.has(repo): return
 		
 	var items = state[repo].get("items", [])
-	var target_cache = cache_dir.path_join(repo.split("/")[1])
+	var is_enabled = state[repo].get("enabled", true)
 	var mod_name = repo.split("/")[1]
+	var target_cache = cache_dir.path_join(mod_name)
 	
 	status_updated.emit("Uninstalling " + mod_name + "...")
-	ThreadedFileIO.uninstall_mod_async(target_cache, game_mods_dir, items, func():
+	
+	ThreadedFileIO.uninstall_mod_async(target_cache, game_mods_dir, items, is_enabled, func():
 		state.erase(repo)
 		FileUtiles.save_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), state)
 		
@@ -264,17 +260,3 @@ func uninstall_mod(repo: String) -> void:
 		status_updated.emit(mod_name + " uninstalled.")
 		refresh_mod_list()
 	)
-
-# --- Token Management ---
-
-func has_github_token() -> bool:
-	var token_path = base_dir.path_join(AppConfig.TOKEN_PATH)
-	return FileAccess.file_exists(token_path)
-
-func save_github_token(token: String) -> void:
-	var token_path = base_dir.path_join(AppConfig.TOKEN_PATH)
-	DirAccess.make_dir_recursive_absolute(token_path.get_base_dir())
-	
-	var file = FileAccess.open(token_path, FileAccess.WRITE)
-	if file:
-		file.store_string(token)

@@ -81,7 +81,7 @@ func download_asset(repo: String, url: String, callback: Callable) -> void:
 	add_child(progress_timer)
 	
 	progress_timer.timeout.connect(func():
-		if http.get_http_client_status() == HTTPClient.STATUS_BODY:
+		if is_instance_valid(http) and http.get_http_client_status() == HTTPClient.STATUS_BODY:
 			var total = http.get_body_size()
 			var downloaded = http.get_downloaded_bytes()
 			if total > 0:
@@ -89,8 +89,8 @@ func download_asset(repo: String, url: String, callback: Callable) -> void:
 	)
 	
 	http.request_completed.connect(func(_result, response_code, _headers, body):
-		progress_timer.queue_free()
-		http.queue_free()
+		if is_instance_valid(progress_timer): progress_timer.queue_free()
+		if is_instance_valid(http): http.queue_free()
 		
 		if response_code == 200:
 			callback.call(true, body)
@@ -106,22 +106,22 @@ func download_asset(repo: String, url: String, callback: Callable) -> void:
 		
 	var err = http.request(url, headers)
 	if err != OK:
-		progress_timer.queue_free()
-		http.queue_free()
+		if is_instance_valid(progress_timer): progress_timer.queue_free()
+		if is_instance_valid(http): http.queue_free()
 		callback.call(false, PackedByteArray())
 
 # --- Internal Helpers ---
 
 func _get_github_token() -> String:
-	# Replace with your actual base_dir access method, or ensure AppConfig path is absolute
 	var base_dir = OS.get_executable_path().get_base_dir() if not OS.has_feature("editor") else ProjectSettings.globalize_path("res://")
-	var token_path = base_dir.path_join(AppConfig.MOD_DATA_DIR).path_join("github_api_token.txt")
+	
+	# Uses the centralized TOKEN_PATH from app_config.gd instead of manually constructing it
+	var token_path = base_dir.path_join(AppConfig.TOKEN_PATH)
 	
 	if FileAccess.file_exists(token_path):
 		var token_file = FileAccess.open(token_path, FileAccess.READ)
 		return token_file.get_as_text().strip_edges()
 	return ""
-
 
 func validate_repo(repo: String, callback: Callable) -> void:
 	var http = HTTPRequest.new()

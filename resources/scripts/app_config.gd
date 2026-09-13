@@ -14,7 +14,6 @@ const REMOTE_LIST_FILE: String = "remote_mod_list.json"
 const CUSTOM_LIST_FILE: String = "custom_mod_list.json"
 const MOD_STATE_FILE: String = "installed_mods.json"
 const GAME_MODS_DIR: String = "mods"
-const BACKUPS_DIR: String = "mods/.backups"
 const MOD_CACHE_DIR: String = "mod_manager_data/cache"
 
 # Centralized Paths
