@@ -1,6 +1,6 @@
 class_name AppLogger
 
-const LOG_FILE_NAME = "launcher_errors.log"
+const LOG_FILE_NAME = "launcher.log"
 
 # Internal helper to dynamically find the correct directory
 static func _get_log_path() -> String:

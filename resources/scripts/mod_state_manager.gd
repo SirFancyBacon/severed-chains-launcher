@@ -15,11 +15,12 @@ var cache_dir: String
 var game_mods_dir: String
 var backups_dir: String
 
-func initialize_paths(root_dir: String) -> void:
+func initialize_paths(root_dir: String, active_build_dir: String) -> void:
 	base_dir = root_dir
 	data_dir = base_dir.path_join(AppConfig.MOD_DATA_DIR)
 	cache_dir = base_dir.path_join(AppConfig.MOD_CACHE_DIR)
-	game_mods_dir = base_dir.path_join(AppConfig.GAME_MODS_DIR)
+	
+	game_mods_dir = active_build_dir.path_join(AppConfig.GAME_MODS_DIR)
 	
 	for dir in [data_dir, cache_dir, game_mods_dir, backups_dir]:
 		DirAccess.make_dir_recursive_absolute(dir)

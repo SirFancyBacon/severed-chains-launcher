@@ -82,7 +82,7 @@ func _initialize_environment() -> void:
 	_check_for_launcher_updates()
 	_check_engine_installed()
 	_check_launch_readiness()
-	mod_manager.initialize_paths(base_dir)
+	mod_manager.initialize_paths(base_dir, active_sc_dir)
 
 func _bind_ui_signals() -> void:
 	launch_button.pressed.connect(_on_launch_pressed)
@@ -149,7 +149,7 @@ func _initialize_settings_tab() -> void:
 	gpu_option_btn.add_item("Discrete (High Performance)", 1)
 	gpu_option_btn.add_item("Integrated (Power Saving)", 2)
 	
-	var conf_path = base_dir.path_join(AppConfig.LAUNCH_CONF)
+	var conf_path = active_sc_dir.path_join(AppConfig.LAUNCH_CONF)
 	
 	# Pass "-1" as the default to detect a first-time run
 	var saved_pref_str = FileUtiles.read_config_value(conf_path, "GPU_PREFERENCE", "-1")

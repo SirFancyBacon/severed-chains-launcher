@@ -18,7 +18,7 @@ var conflict_dialog: ConfirmationDialog
 var _current_confirm: Callable
 var _current_cancel: Callable
 
-func initialize_paths(root_dir: String) -> void:
+func initialize_paths(root_dir: String, active_build_dir: String) -> void:
 	_setup_conflict_dialog()
 	_connect_service_signals()
 	
@@ -33,7 +33,7 @@ func initialize_paths(root_dir: String) -> void:
 	# Send the selected path to the state manager
 	local_zip_dialog.file_selected.connect(state_manager.install_local_zip)
 	
-	state_manager.initialize_paths(root_dir)
+	state_manager.initialize_paths(root_dir, active_build_dir)
 	state_manager.refresh_mod_list()
 
 func _setup_conflict_dialog() -> void:
