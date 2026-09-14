@@ -35,6 +35,8 @@ var pending_update_version: String = ""
 var update_progress_dialog: AcceptDialog
 var game_pid: int = -1
 var active_sc_dir: String = ""
+var last_launch_time: int = 0
+var game_log_path: String = ""
 
 
 # --- Lifecycle & Boot ---
@@ -48,6 +50,8 @@ func _ready() -> void:
 	_bind_ui_signals()
 	_load_rss_feed()
 	_fetch_changelog()
+	
+	AppLogger.info("Launcher UI initialized successfully.")
 
 func _handle_cli_update_handoff() -> bool:
 	var args = OS.get_cmdline_args()
@@ -69,7 +73,6 @@ func _initialize_environment() -> void:
 		base_dir = OS.get_executable_path().get_base_dir()
 	
 	active_sc_dir = base_dir.path_join(AppConfig.SC_STABLE_DIR)
-	
 	
 	_migrate_legacy_installation() # Remove eventually
 	
@@ -136,8 +139,6 @@ func _apply_dpi_scaling() -> void:
 		
 	# Force the window strictly to the primary monitor's index
 	window.current_screen = DisplayServer.get_primary_screen()
-	
-	# Godot automatically calculates the exact center for the primary display
 	window.move_to_center()
 
 # --- Settings Tab Logic ---
@@ -155,7 +156,7 @@ func _initialize_settings_tab() -> void:
 	var current_pref = saved_pref_str.to_int()
 	
 	if current_pref == -1:
-		current_pref = 1 # 1 = Discrete in UI (Translates to Registry GpuPreference=2)
+		current_pref = 1 
 		FileUtiles.write_config_value(conf_path, "GPU_PREFERENCE", str(current_pref))
 		if OS.has_feature("windows"):
 			FileUtiles.apply_windows_gpu_registry(current_pref, base_dir)
@@ -185,32 +186,40 @@ func _on_gpu_preference_changed(index: int) -> void:
 
 func _on_launch_pressed() -> void:
 	if game_pid != -1 and OS.is_process_running(game_pid):
-		return # Prevent execution if already running
+		return 
 		
 	var script_name = "launch.bat" if OS.has_feature("windows") else "launch"
 	var script_path = active_sc_dir.path_join(script_name)
 
 	if not FileAccess.file_exists(script_path):
-		print("Launch script not found at: ", script_path)
+		AppLogger.error("Launch script not found at: " + script_path)
+		_show_crash_popup("Launch script not found at:\n" + script_path)
 		return
 
 	launch_button.disabled = true
 	launch_button.text = "Running..."
+	AppLogger.info("Attempting to launch game process...")
+	
+	# Establish the log path inside mod_manager_data
+	game_log_path = base_dir.path_join(AppConfig.MOD_DATA_DIR).path_join("latest_launch.log")
 
 	if OS.has_feature("windows"):
-		var cmd_string = 'cd /d "%s" && launch.bat' % active_sc_dir
+		var cmd_string = 'cd /d "%s" && launch.bat > "%s" 2>&1' % [active_sc_dir, game_log_path]
 		game_pid = OS.create_process("cmd.exe", ["/c", cmd_string])
 	else:
 		FileAccess.set_unix_permissions(script_path, 493)
-		var output = []
-		game_pid = OS.execute("bash", ["-c", 'cd "%s" && ./launch' % active_sc_dir], output, false)
+		var cmd_string = "cd '%s' && ./launch > '%s' 2>&1" % [active_sc_dir, game_log_path]
+		game_pid = OS.create_process("/bin/bash", ["-c", cmd_string])
 
 	if game_pid != -1:
+		AppLogger.info("Game process successfully spawned with PID: " + str(game_pid))
+		last_launch_time = Time.get_ticks_msec()
 		_start_process_monitor()
 	else:
+		AppLogger.error("OS refused to spawn the game process.")
 		launch_button.disabled = false
 		launch_button.text = "Launch"
-		print("Failed to launch game process.")
+		_show_crash_popup("OS refused to spawn the game process.")
 
 func _start_process_monitor() -> void:
 	var monitor = Timer.new()
@@ -221,6 +230,19 @@ func _start_process_monitor() -> void:
 		if not OS.is_process_running(game_pid):
 			launch_button.disabled = false
 			launch_button.text = "Launch"
+			
+			var uptime = Time.get_ticks_msec() - last_launch_time
+			if uptime < 5000:
+				AppLogger.error("Game process crashed immediately. Uptime: " + str(uptime) + "ms")
+				var log_contents = "Unknown error."
+				if FileAccess.file_exists(game_log_path):
+					var file = FileAccess.open(game_log_path, FileAccess.READ)
+					if file: log_contents = file.get_as_text()
+				
+				_show_crash_popup("Severed Chains crashed immediately. Log output:\n\n" + log_contents.left(1000), game_log_path)
+			else:
+				AppLogger.info("Game process exited cleanly.")
+				
 			game_pid = -1
 			monitor.queue_free()
 	)
@@ -241,20 +263,24 @@ func _check_engine_installed() -> void:
 func _start_engine_install() -> void:
 	sc_install_btn.disabled = true
 	sc_install_btn.text = "Checking releases..."
+	AppLogger.info("Starting engine installation process...")
 	
 	_fetch_github_release(AppConfig.ENGINE_REPO, func(release_data):
 		if release_data.is_empty():
 			sc_install_btn.text = "API Error"
 			sc_install_btn.disabled = false
+			AppLogger.error("Failed to retrieve engine release data.")
 			return
 
 		var asset_url = _find_os_asset_url(release_data.get("assets", []))
 		if asset_url == "":
 			sc_install_btn.text = "No compatible build found"
 			sc_install_btn.disabled = false
+			AppLogger.error("No compatible OS asset found in engine release.")
 			return
 
 		sc_install_btn.text = "Downloading engine..."
+		AppLogger.info("Downloading engine release asset...")
 		_download_asset(asset_url, func(body):
 			sc_install_btn.text = "Extracting..."
 			ModExtractor.begin_root_extraction(body, asset_url, active_sc_dir, _finalize_engine_install)
@@ -263,6 +289,7 @@ func _start_engine_install() -> void:
 
 func _finalize_engine_install(success: bool, _message: String) -> void:
 	if success:
+		AppLogger.info("Engine installation finalized successfully.")
 		sc_install_btn.visible = false
 		var iso_dir = base_dir.path_join(AppConfig.ISOS_DIR)
 		
@@ -272,6 +299,7 @@ func _finalize_engine_install(success: bool, _message: String) -> void:
 		OS.shell_open(ProjectSettings.globalize_path(iso_dir))
 		iso_dialog.popup_centered()
 	else:
+		AppLogger.error("Engine installation failed: " + _message)
 		sc_install_btn.text = "Install Failed"
 		sc_install_btn.disabled = false
 
@@ -286,9 +314,9 @@ func _check_for_launcher_updates() -> void:
 		var current_ver = ProjectSettings.get_setting("application/config/version", "1.0.0").trim_prefix("v")
 
 		if latest_ver != "" and latest_ver != current_ver:
+			AppLogger.info("Launcher update v" + latest_ver + " is available.")
 			var asset_url = _find_os_asset_url(release_data.get("assets", []))
 			if asset_url != "":
-				# Store the URL instead of downloading immediately
 				pending_update_url = asset_url
 				pending_update_version = latest_ver
 				launcher_update_btn.text = "Update v" + latest_ver + " Available"
@@ -304,8 +332,10 @@ func _on_launcher_update_pressed() -> void:
 
 		var pid = OS.create_process(ready_update_path, ["--apply-update", str(OS.get_process_id()), OS.get_executable_path()])
 		if pid == -1:
+			AppLogger.error("OS blocked restarting the launcher for update.")
 			launcher_update_btn.text = "Error: Blocked by OS"
 		else:
+			AppLogger.info("Applying update and restarting launcher...")
 			get_tree().quit()
 			
 	elif pending_update_url != "":
@@ -313,9 +343,11 @@ func _on_launcher_update_pressed() -> void:
 		launcher_update_btn.disabled = true
 		update_progress_dialog.dialog_text = "Downloading v%s...\nThis may take a moment." % pending_update_version
 		update_progress_dialog.popup_centered()
+		AppLogger.info("Starting launcher update download...")
 		
 		_download_asset(pending_update_url, func(body):
 			if body.is_empty():
+				AppLogger.error("Failed to download launcher update asset.")
 				update_progress_dialog.hide()
 				launcher_update_btn.text = "Download Failed"
 				launcher_update_btn.disabled = false
@@ -327,6 +359,7 @@ func _on_launcher_update_pressed() -> void:
 
 func _on_updater_extracted(repo: String, version: String, _items: Array, _msg: String, success: bool) -> void:
 	if not success: 
+		AppLogger.error("Extraction of launcher update failed: " + _msg)
 		update_progress_dialog.hide()
 		launcher_update_btn.text = "Extraction Failed"
 		launcher_update_btn.disabled = false
@@ -334,7 +367,9 @@ func _on_updater_extracted(repo: String, version: String, _items: Array, _msg: S
 	
 	var update_dir = base_dir.path_join("mod_manager_data/updater")
 	var dir = DirAccess.open(update_dir)
-	if not dir: return
+	if not dir:
+		AppLogger.error("Failed to open updater extraction directory: " + update_dir)
+		return
 
 	dir.list_dir_begin()
 	var file_name = dir.get_next()
@@ -351,6 +386,7 @@ func _on_updater_extracted(repo: String, version: String, _items: Array, _msg: S
 	update_progress_dialog.hide()
 
 	if ready_update_path != "":
+		AppLogger.info("Launcher update extracted and ready to apply.")
 		launcher_update_btn.text = "Restart to Apply Update"
 		launcher_update_btn.disabled = false
 		launcher_update_btn.queue_redraw()
@@ -391,8 +427,14 @@ func _fetch_github_release(repo: String, callback: Callable) -> void:
 	
 	http.request_completed.connect(func(_result, response_code, _headers, body):
 		http.queue_free()
+		if response_code == 403 or response_code == 429:
+			AppLogger.error("API Rate Limit Exceeded (403/429) on: " + repo)
+			_show_rate_limit_popup()
+			callback.call({})
+			return
+			
 		if response_code != 200:
-			print("API Error on ", repo, " - Code: ", response_code)
+			AppLogger.error("API Error on " + repo + " - Code: " + str(response_code))
 			callback.call({})
 			return
 			
@@ -420,11 +462,13 @@ func _download_asset(url: String, callback: Callable) -> void:
 		if response_code == 200:
 			callback.call(body)
 		else:
-			callback.call(PackedByteArray()) # Return empty bytes on fail
+			AppLogger.error("HTTP Download failed. Code: " + str(response_code) + " URL: " + url)
+			callback.call(PackedByteArray()) 
 	)
 	
 	var err = http.request(url, ["User-Agent: SeveredChains-Launcher"])
 	if err != OK:
+		AppLogger.error("Failed to initialize HTTP request for asset download.")
 		http.queue_free()
 		callback.call(PackedByteArray())
 
@@ -470,12 +514,14 @@ func _on_changelog_request_completed(_result: int, response_code: int, _headers:
 		http_node.queue_free()
 		
 	if response_code != 200:
-		print("Changelog fetch failed. HTTP Code: ", response_code)
+		AppLogger.error("Changelog fetch failed. HTTP Code: " + str(response_code))
 		return
 		
 	var json = JSON.new()
 	if json.parse(body.get_string_from_utf8()) == OK and json.data is Array:
 		_populate_changelog_ui(json.data.slice(0, 30))
+	else:
+		AppLogger.error("Failed to parse changelog JSON response.")
 
 func _populate_changelog_ui(commits: Array) -> void:
 	for commit_data in commits:
@@ -539,14 +585,16 @@ func _on_rss_completed(_result: int, response_code: int, _headers: PackedStringA
 		loading_node.queue_free()
 
 	if response_code != 200:
-		print("Failed to fetch RSS. Status: ", response_code)
+		AppLogger.error("Failed to fetch RSS. Status: " + str(response_code))
 		return
 
 	_parse_rss_xml(body)
 
 func _parse_rss_xml(body: PackedByteArray) -> void:
 	var parser := XMLParser.new()
-	if parser.open_buffer(body) != OK: return
+	if parser.open_buffer(body) != OK:
+		AppLogger.error("Failed to open RSS XML buffer.")
+		return
 
 	var in_item = false
 	var current_title = ""
@@ -582,7 +630,6 @@ func _parse_rss_xml(body: PackedByteArray) -> void:
 				
 				_spawn_rss_item(current_title, current_link, clean_date, clean_desc)
 				
-				# Reset parameters for the next article
 				current_title = ""
 				current_link = ""
 				current_date = ""
@@ -637,7 +684,7 @@ func _setup_token_dialog() -> void:
 	vbox.add_child(label)
 	
 	token_input = LineEdit.new()
-	token_input.secret = true # Masks the input
+	token_input.secret = true 
 	token_input.placeholder_text = "ghp_..."
 	vbox.add_child(token_input)
 	
@@ -661,11 +708,13 @@ func _on_token_saved() -> void:
 		if file:
 			file.store_string(token)
 			file.close()
+			AppLogger.info("GitHub API token saved successfully.")
+		else:
+			AppLogger.error("Failed to write GitHub API token to: " + token_path)
 			
 		_update_token_button_state()
 
 func _update_token_button_state() -> void:
-	# Re-using your existing helper to determine button state
 	if not _get_github_token().is_empty():
 		add_token_btn.text = "Token Found"
 		add_token_btn.disabled = true
@@ -681,7 +730,6 @@ func _setup_update_dialog() -> void:
 	update_progress_dialog.exclusive = true 
 	add_child(update_progress_dialog)
 	
-	# Hide the OK button so it acts strictly as a blocking loading screen
 	var ok_btn = update_progress_dialog.get_ok_button()
 	if ok_btn:
 		ok_btn.hide()
@@ -689,18 +737,23 @@ func _setup_update_dialog() -> void:
 
 # --- Severed Chains Rebuild ---
 func _purge_game_installation() -> void:
-	if not DirAccess.dir_exists_absolute(active_sc_dir): return
+	if not DirAccess.dir_exists_absolute(active_sc_dir): 
+		AppLogger.warning("Purge aborted: Target directory does not exist (" + active_sc_dir + ")")
+		return
 	
 	var safe_folders = ["isos", "mods", "saves"]
 	var dir = DirAccess.open(active_sc_dir)
-	if not dir: return
+	if not dir: 
+		AppLogger.error("Failed to open directory for purging: " + active_sc_dir)
+		return
+	
+	AppLogger.info("Starting purge of game installation directory: " + active_sc_dir)
 	
 	dir.list_dir_begin()
 	var file_name = dir.get_next()
 	
 	while file_name != "":
 		if file_name != "." and file_name != "..":
-			# Only protect the user's game data. Wipe everything else (Java, configs, JARs).
 			if dir.current_is_dir() and file_name in safe_folders:
 				pass # Keep it safe
 			else:
@@ -712,30 +765,77 @@ func _purge_game_installation() -> void:
 					
 		file_name = dir.get_next()
 		
-	# Refresh the UI state to expose the "Install Severed Chains" button again
+	AppLogger.info("Game installation purge complete.")
 	_check_engine_installed()
 
 
+# --- Helper Functions ---
+var _rate_limit_popup_active: bool = false
+func _show_rate_limit_popup() -> void:
+	if _rate_limit_popup_active: return
+	_rate_limit_popup_active = true
+	
+	var dialog = AcceptDialog.new()
+	dialog.title = "GitHub API Limit Exceeded"
+	dialog.dialog_text = "You have exceeded GitHub's hourly request limit.\n\nPlease wait up to an hour.\n\nor add a GitHub Personal Access Token in the Misc tab to permanently bypass this limit."
+	
+	add_child(dialog)
+	dialog.popup_centered()
+	
+	dialog.confirmed.connect(func(): 
+		_rate_limit_popup_active = false
+		dialog.queue_free()
+	)
+	dialog.canceled.connect(func(): 
+		_rate_limit_popup_active = false
+		dialog.queue_free()
+	)
+
+func _show_crash_popup(error_msg: String, log_path: String = "") -> void:
+	var dialog = AcceptDialog.new()
+	dialog.title = "Game Launch Failed"
+	
+	var vbox = VBoxContainer.new()
+	
+	if not log_path.is_empty():
+		var path_label = Label.new()
+		path_label.text = "Log saved to: " + log_path
+		path_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		vbox.add_child(path_label)
+		
+	var text_edit = TextEdit.new()
+	text_edit.text = error_msg
+	text_edit.editable = false
+	text_edit.wrap_mode = TextEdit.LINE_WRAPPING_BOUNDARY
+	text_edit.custom_minimum_size = Vector2(600, 250)
+	vbox.add_child(text_edit)
+	
+	dialog.add_child(vbox)
+	dialog.min_size = Vector2(650, 350)
+	
+	add_child(dialog)
+	dialog.popup_centered()
+	dialog.confirmed.connect(func(): dialog.queue_free())
+
 # --- Delete eventually ---
 func _migrate_legacy_installation() -> void:
-	# Prevent catastrophic file moves if you are testing inside the Godot editor
 	if OS.has_feature("editor"):
 		return
 		
-	# Trigger migration only if the legacy script exists in the root
 	var legacy_bat = base_dir.path_join("launch.bat")
 	var legacy_sh = base_dir.path_join("launch")
 	
 	if not FileAccess.file_exists(legacy_bat) and not FileAccess.file_exists(legacy_sh):
 		return 
 		
-	print("Migrating legacy Severed Chains installation to new structure...")
+	AppLogger.info("Migrating legacy Severed Chains installation to new structure...")
 	DirAccess.make_dir_recursive_absolute(active_sc_dir)
 	
 	var dir = DirAccess.open(base_dir)
-	if not dir: return
+	if not dir: 
+		AppLogger.error("Migration failed: Cannot open base directory.")
+		return
 	
-	# Define exactly what stays in the root directory
 	var exclusions = [
 		".", "..", 
 		AppConfig.MOD_DATA_DIR, 
@@ -746,7 +846,6 @@ func _migrate_legacy_installation() -> void:
 	var item_name = dir.get_next()
 	
 	while item_name != "":
-		# Leave any OS variant of the launcher binary alone (e.g. .exe, .pck, .x86_64)
 		var is_launcher_binary = item_name.begins_with("severed-chains-launcher")
 		
 		if not (item_name in exclusions) and not is_launcher_binary:

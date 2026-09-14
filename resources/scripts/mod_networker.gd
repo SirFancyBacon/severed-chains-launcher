@@ -35,7 +35,7 @@ func fetch_mod_release(repo: String, saved_etag: String, callback: Callable) -> 
 		http.queue_free()
 		
 		if response_code == 403:
-			print_rich("[color=red]API ERROR 403: GitHub rate limit exceeded or token forbidden when fetching updates for '" + repo + "'.[/color]")
+			AppLogger.error("GitHub API Rate Limit %d on mod repo: %s" % [response_code, repo])
 			
 		var new_etag = ""
 		for header in headers:
@@ -68,7 +68,8 @@ func fetch_mod_release(repo: String, saved_etag: String, callback: Callable) -> 
 
 func download_asset(repo: String, url: String, callback: Callable) -> void:
 	if url.is_empty():
-		print_rich("[color=red]Download failed: URL is empty for " + repo + "[/color]")
+		AppLogger.error("Download failed: URL is empty for " + repo)
+		print_rich()
 		callback.call(false, PackedByteArray())
 		return
 		
@@ -95,7 +96,7 @@ func download_asset(repo: String, url: String, callback: Callable) -> void:
 		if response_code == 200:
 			callback.call(true, body)
 		else:
-			print_rich("[color=red]Download failed with HTTP code " + str(response_code) + " for " + repo + "[/color]")
+			AppLogger.error("Download Failed with code %d on mod repo: %s" % [response_code, repo])
 			callback.call(false, PackedByteArray())
 	)
 	
@@ -131,7 +132,7 @@ func validate_repo(repo: String, callback: Callable) -> void:
 		http.queue_free()
 		
 		if response_code == 403:
-			print_rich("[color=red]API ERROR 403: GitHub rate limit exceeded or token forbidden when validating '" + repo + "'.[/color]")
+			AppLogger.error("GitHub API Rate Limit %d on mod repo: %s" % [response_code, repo])
 			
 		callback.call(response_code == 200)
 	)
