@@ -137,8 +137,8 @@ static func copy_recursive(src: String, dst: String) -> void:
 
 
 
-static func validate_iso_directory(base_dir: String) -> Dictionary:
-	var iso_dir = base_dir.path_join(AppConfig.ISOS_DIR)
+static func validate_iso_directory(active_build_dir: String) -> Dictionary:
+	var iso_dir = active_build_dir.path_join(AppConfig.ISOS_DIR)
 	
 	if not DirAccess.dir_exists_absolute(iso_dir):
 		return {"valid": false, "message": "The 'isos' folder is missing."}

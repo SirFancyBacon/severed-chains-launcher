@@ -105,7 +105,7 @@ func _bind_ui_signals() -> void:
 	setup_guide_steam.pressed.connect(func(): OS.shell_open("https://legendofdragoon.org/guides/setup-steamdeck/"))
 
 func _check_launch_readiness() -> void:
-	var validation = FileUtiles.validate_iso_directory(base_dir)
+	var validation = FileUtiles.validate_iso_directory(active_sc_dir)
 	
 	if validation["valid"]:
 		launch_button.disabled = false
@@ -116,7 +116,7 @@ func _check_launch_readiness() -> void:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_FOCUS_IN:
-		if base_dir != "": 
+		if active_sc_dir != "": 
 			_check_launch_readiness()
 
 
@@ -291,7 +291,7 @@ func _finalize_engine_install(success: bool, _message: String) -> void:
 	if success:
 		AppLogger.info("Engine installation finalized successfully.")
 		sc_install_btn.visible = false
-		var iso_dir = base_dir.path_join(AppConfig.ISOS_DIR)
+		var iso_dir = active_sc_dir.path_join("isos")
 		
 		if not DirAccess.dir_exists_absolute(iso_dir):
 			DirAccess.make_dir_recursive_absolute(iso_dir)
