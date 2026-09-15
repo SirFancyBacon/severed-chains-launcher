@@ -30,6 +30,11 @@
 	"description": "Dragoon Modifier is a simple tool that anyone can use with a spreadsheet editor to make their own custom difficulties. It comes with my prepackaged difficulty preset with additional mods.\nSee Readme.md"
   },
   {
+	"repo": "Legend-of-Dragoon-Modding/Additional-Additions",
+	"name": "Additional-Additions",
+	"description": "This mod does nothing on its own\nRequired for Addition-Packs"
+  },
+  {
 	"repo": "DennytXVII/BattleRewardsMod",
 	"name": "Battle Rewards Mod",
 	"description": "This mod allows the player to modify the amount of gold or experience gained through battles, via the options menu. "
