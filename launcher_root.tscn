@@ -119,7 +119,8 @@ current_tab = 0
 tab_0/title = "   LoD News   "
 tab_1/title = "   SC Changelog   "
 tab_2/title = "   Mod Manager   "
-tab_3/title = "  Misc  "
+tab_3/title = "   Help   "
+tab_4/title = "   Misc   "
 
 [node name="News" type="MarginContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer" unique_id=802232248]
 layout_mode = 2
@@ -171,7 +172,7 @@ metadata/_tab_name = "   Mod Manager   "
 [node name="ModManager" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Mod Manager" unique_id=248093997 instance=ExtResource("1_1bw1c")]
 layout_mode = 2
 
-[node name="Optional" type="MarginContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer" unique_id=996537095]
+[node name="Help" type="MarginContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer" unique_id=976579167]
 visible = false
 layout_mode = 2
 theme_override_constants/margin_left = 10
@@ -179,134 +180,32 @@ theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 metadata/_tab_index = 3
-metadata/_tab_name = "  Misc  "
+metadata/_tab_name = "   Help   "
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional" unique_id=1103588557]
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help" unique_id=1446225735]
 layout_mode = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer" unique_id=521461937]
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer" unique_id=281696742]
 layout_mode = 2
 size_flags_horizontal = 6
 size_flags_vertical = 3
 theme_override_constants/separation = 8
 
-[node name="GPUHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=225745252]
-layout_mode = 2
-
-[node name="FrontSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/GPUHBox" unique_id=1696901849]
-custom_minimum_size = Vector2(50, 0)
-layout_mode = 2
-
-[node name="Label" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/GPUHBox" unique_id=1298999563]
-layout_mode = 2
-size_flags_horizontal = 3
-tooltip_text = "For computers with two graphics cards (like gaming laptops). 
-Use this to force the game to run on your powerful graphics card for the best performance, 
-or the basic one to save battery."
-mouse_filter = 1
-text = "Laptop GPU Preferences"
-
-[node name="OptionButton" type="OptionButton" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/GPUHBox" unique_id=1416098286]
-layout_mode = 2
-tooltip_text = "For computers with two graphics cards (like gaming laptops). 
-Use this to force the game to run on your powerful graphics card for the best performance, 
-or the basic one to save battery."
-
-[node name="EndSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/GPUHBox" unique_id=1522740028]
-custom_minimum_size = Vector2(50, 0)
-layout_mode = 2
-
-[node name="ReportIssuesLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=896702358]
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "Report Issues"
-horizontal_alignment = 1
-
-[node name="IssuesHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=859617944]
-custom_minimum_size = Vector2(160, 52)
-layout_mode = 2
-theme_override_constants/separation = 8
-alignment = 1
-
-[node name="ReportIssueSCGithub" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/IssuesHBox" unique_id=381655271]
-custom_minimum_size = Vector2(160, 0)
-layout_mode = 2
-tooltip_text = "Report issues with Severed Chains"
-text = "Severed Chains
-Github"
-
-[node name="ReportIssuesLoDDiscord" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/IssuesHBox" unique_id=2146957291]
-custom_minimum_size = Vector2(160, 0)
-layout_mode = 2
-tooltip_text = "#player-help channel
-in LoD Community Discord."
-text = "Player Help
-on LoD Discord"
-
-[node name="ReportIssuesLauncher" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/IssuesHBox" unique_id=602801494]
-custom_minimum_size = Vector2(160, 0)
-layout_mode = 2
-tooltip_text = "Report issues related to:
-SC Launcher or Mod Manager."
-text = "Launcher Issues"
-
-[node name="FileUtilsLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=1715246627]
-layout_mode = 2
-theme_override_font_sizes/font_size = 24
-text = "File Utilities"
-horizontal_alignment = 1
-
-[node name="FileUtilsHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=926987522]
-custom_minimum_size = Vector2(160, 52)
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 3
-theme_override_constants/separation = 8
-
-[node name="OpenGameDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/FileUtilsHBox" unique_id=1970393987]
-custom_minimum_size = Vector2(160, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-tooltip_text = "Launcher,  debug.log, and game files."
-text = "Open Game 
-Directory"
-
-[node name="OpenGameIsoDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/FileUtilsHBox" unique_id=1072695004]
-custom_minimum_size = Vector2(160, 0)
-layout_mode = 2
-tooltip_text = "Place your PS1 disc images in this folder."
-text = "Open isos
-Directory"
-
-[node name="PurgeGameFiles" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/FileUtilsHBox" unique_id=1059123852]
-custom_minimum_size = Vector2(160, 0)
-layout_mode = 2
-size_flags_horizontal = 3
-tooltip_text = "Deletes everything in the directory the launcher is in.
-It spares the following folders:
-isos, mods, saves, mod_manager_data
-------------------------------------------------------
-**EVERYTHING ELSE IS DELETED.**
-------------------------------------------------------
-Use with caution."
-text = "Severed Chains
-Data Purge"
-
-[node name="SetupGuidesLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=1746596524]
+[node name="SetupGuidesLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer" unique_id=959078208]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 text = "Setup Guides"
 horizontal_alignment = 1
 
-[node name="SetupGuidesHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=67403560]
+[node name="SetupGuidesHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer" unique_id=83174718]
 layout_mode = 2
 theme_override_constants/separation = 8
 
-[node name="FrontSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/SetupGuidesHBox" unique_id=1845912729]
-custom_minimum_size = Vector2(90, 0)
+[node name="FrontSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/SetupGuidesHBox" unique_id=98251935]
+custom_minimum_size = Vector2(64, 0)
 layout_mode = 2
 
-[node name="OpenSetupGuidePC" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/SetupGuidesHBox" unique_id=1704636904]
+[node name="OpenSetupGuidePC" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/SetupGuidesHBox" unique_id=441845171]
 custom_minimum_size = Vector2(175, 0)
 layout_mode = 2
 tooltip_text = "If running on 
@@ -315,7 +214,7 @@ Start here"
 text = "Windows
 Linux/Mac"
 
-[node name="OpenSetupGuideSD" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer/SetupGuidesHBox" unique_id=129422021]
+[node name="OpenSetupGuideSD" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/SetupGuidesHBox" unique_id=642480363]
 custom_minimum_size = Vector2(175, 0)
 layout_mode = 2
 tooltip_text = "If running on 
@@ -323,7 +222,131 @@ SteamDeck
 Start here"
 text = "SteamDeck"
 
-[node name="AddGitTokenButton" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Optional/ScrollContainer/VBoxContainer" unique_id=527613026]
+[node name="FileUtilsLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer" unique_id=956709551]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "File Utilities"
+horizontal_alignment = 1
+
+[node name="FileUtilsHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer" unique_id=837676345]
+custom_minimum_size = Vector2(160, 52)
+layout_mode = 2
+size_flags_horizontal = 4
+theme_override_constants/separation = 8
+
+[node name="OpenGameDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/FileUtilsHBox" unique_id=1774798694]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Launcher,  debug.log, and game files."
+text = "Open Game 
+Directory"
+
+[node name="OpenGameIsoDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/FileUtilsHBox" unique_id=1219452646]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+tooltip_text = "Place your PS1 disc images in this folder."
+text = "Open isos
+Directory"
+
+[node name="PurgeGameFiles" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/FileUtilsHBox" unique_id=955716831]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Deletes everything in the active Severed Chains build directory.
+It spares the ONLY following folders and contents:
+
+isos, mods, saves, mod_manager_data
+
+------------------------------------------------------
+**EVERYTHING ELSE IS DELETED.**
+------------------------------------------------------
+There is NO undo button.
+
+Use with caution."
+text = "Severed Chains
+Data Purge"
+
+[node name="ReportIssuesLabel" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer" unique_id=1995031066]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Report Issues"
+horizontal_alignment = 1
+
+[node name="IssuesHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer" unique_id=1218265562]
+custom_minimum_size = Vector2(160, 52)
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="ReportIssueSCGithub" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/IssuesHBox" unique_id=75390417]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+tooltip_text = "Report issues with Severed Chains"
+text = "Severed Chains
+Github"
+
+[node name="ReportIssuesLoDDiscord" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/IssuesHBox" unique_id=1604144272]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+tooltip_text = "#player-help channel
+in LoD Community Discord."
+text = "Player Help
+on LoD Discord"
+
+[node name="ReportIssuesLauncher" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/IssuesHBox" unique_id=18026616]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+tooltip_text = "Report issues related to:
+SC Launcher or Mod Manager."
+text = "Launcher Issues"
+
+[node name="Misc" type="MarginContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer" unique_id=996537095]
+visible = false
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+metadata/_tab_index = 4
+metadata/_tab_name = "   Misc   "
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Misc" unique_id=1103588557]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Misc/ScrollContainer" unique_id=521461937]
+layout_mode = 2
+size_flags_horizontal = 6
+size_flags_vertical = 3
+theme_override_constants/separation = 8
+
+[node name="GPUHBox" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Misc/ScrollContainer/VBoxContainer" unique_id=225745252]
+layout_mode = 2
+
+[node name="FrontSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Misc/ScrollContainer/VBoxContainer/GPUHBox" unique_id=1696901849]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+
+[node name="Label" type="Label" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Misc/ScrollContainer/VBoxContainer/GPUHBox" unique_id=1298999563]
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "For computers with two graphics cards (like gaming laptops). 
+Use this to force the game to run on your powerful graphics card for the best performance, 
+or the basic one to save battery."
+mouse_filter = 1
+text = "Laptop GPU Preferences"
+
+[node name="OptionButton" type="OptionButton" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Misc/ScrollContainer/VBoxContainer/GPUHBox" unique_id=1416098286]
+layout_mode = 2
+tooltip_text = "For computers with two graphics cards (like gaming laptops). 
+Use this to force the game to run on your powerful graphics card for the best performance, 
+or the basic one to save battery."
+
+[node name="EndSpacer" type="Control" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Misc/ScrollContainer/VBoxContainer/GPUHBox" unique_id=1522740028]
+custom_minimum_size = Vector2(50, 0)
+layout_mode = 2
+
+[node name="AddGitTokenButton" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Misc/ScrollContainer/VBoxContainer" unique_id=527613026]
 layout_mode = 2
 tooltip_text = "Add a Github token.
 Prevents 403 limit error
