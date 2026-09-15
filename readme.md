@@ -5,11 +5,12 @@ A cross-platform launcher and mod manager for [Severed Chains](https://github.co
 
 ## Key Features
 
-* **Easy Installation & Updates:** Download and extract the latest Severed Chains engine development release with the click of a button. The launcher also features a self-updater that displays when updates are available for it.
-* **Integrated Mod Manager:** Browse, install, toggle, and update community mods directly from GitHub.
+* **Easy Installation & Updates:** The launcher features a self-updater that displays when updates are available for it
+* **Severed Chains Installation:** Install Severed Chains latest github release directly from the launcher
+* **Integrated Mod Manager:** Browse, install, toggle, and update community mods. Custom Repository and Local Zip file support.
 * **Laptop GPU Optimization:** Includes a built-in shim to force dual-GPU systems to utilize their high-performance discrete graphics card (or integrated card for battery saving)
-* **Live Community Hub:** Features an integrated RSS feed for LegendofDragoon.org news and a live changelog pulled directly from the Severed Chains GitHub repository.
-* **Steam Deck & Linux Ready:** Needs testing.
+* **Live Community Hub:** Features an integrated RSS feed for LegendofDragoon.org news and a live change log pulled directly from the Severed Chains GitHub.
+* **Steam Deck & Linux Ready:**
 
 ## Setup Instructions
 
