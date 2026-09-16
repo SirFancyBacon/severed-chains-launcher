@@ -245,11 +245,24 @@ Directory"
 [node name="OpenGameIsoDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/FileUtilsHBox" unique_id=1219452646]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 tooltip_text = "Place your PS1 disc images in this folder."
 text = "Open isos
 Directory"
 
-[node name="PurgeGameFiles" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/FileUtilsHBox" unique_id=955716831]
+[node name="FileUtilsHBox2" type="HBoxContainer" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer" unique_id=471652930]
+custom_minimum_size = Vector2(160, 52)
+layout_mode = 2
+
+[node name="OpenLauncherDir" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/FileUtilsHBox2" unique_id=251592819]
+custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+tooltip_text = "Place your PS1 disc images in this folder."
+text = "Open Launcher
+Data Directory"
+
+[node name="PurgeGameFiles" type="Button" parent="MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/FileUtilsHBox2" unique_id=955716831]
 custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
 size_flags_horizontal = 3

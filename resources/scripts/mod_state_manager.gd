@@ -19,8 +19,9 @@ func initialize_paths(root_dir: String, active_build_dir: String) -> void:
 	base_dir = root_dir
 	data_dir = base_dir.path_join(AppConfig.MOD_DATA_DIR)
 	cache_dir = base_dir.path_join(AppConfig.MOD_CACHE_DIR)
-	
 	game_mods_dir = active_build_dir.path_join(AppConfig.GAME_MODS_DIR)
+	
+	AppLogger.info("Initializing Mod Manager paths. Target mods dir: " + game_mods_dir)
 	
 	for dir in [data_dir, cache_dir, game_mods_dir, backups_dir]:
 		DirAccess.make_dir_recursive_absolute(dir)
@@ -105,6 +106,7 @@ func _check_updates_for_list(merged_list: Array, installed_state: Dictionary) ->
 		
 		networker.fetch_mod_release(repo, saved_etag, func(code, data, new_etag):
 			if code == 200:
+				AppLogger.info("Fetched update info for mod: " + repo)
 				var tag = data.get("tag_name", "")
 				var url = data.get("zipball_url", "") 
 				var assets = data.get("assets", [])
@@ -123,23 +125,31 @@ func _check_updates_for_list(merged_list: Array, installed_state: Dictionary) ->
 				var tag = installed_state.get(repo, {}).get("remote_version", "")
 				var url = installed_state.get(repo, {}).get("remote_url", "")
 				remote_info_updated.emit(repo, tag, url, current_version)
+			else:
+				AppLogger.warning("Mod update check for " + repo + " returned non-standard HTTP code: " + str(code))
+			
 		)
 
 # --- Installation Pipeline ---
 
 func begin_installation(repo: String, url: String, version: String) -> void:
 	status_updated.emit("Downloading " + repo.split("/")[1] + "...")
+	AppLogger.info("Starting download for mod repo: " + repo + " from URL: " + url)
+	
 	networker.download_asset(repo, url, func(success: bool, body: PackedByteArray):
 		if not success:
 			status_updated.emit("Download failed for " + repo)
+			AppLogger.error("Download failed for mod repo: " + repo)
 			return
 			
 		status_updated.emit("Extracting...")
 		var temp_dir = data_dir.path_join("temp_extract").path_join(repo.split("/")[1])
 		
-		ModExtractor.begin_extraction(body, repo, version, temp_dir, func(_r, _v, _i, msg, extract_ok):
+		# Pass the 'url' parameter so ModExtractor can detect raw .jar downloads
+		ModExtractor.begin_extraction(body, repo, version, url, temp_dir, func(_r, _v, _i, msg, extract_ok):
 			if not extract_ok: 
 				call_deferred("emit_signal", "status_updated", "Error: " + msg)
+				AppLogger.error("Extraction error for " + repo + ": " + msg)
 				return
 			call_deferred("_execute_conflict_scan", repo, version, temp_dir)
 		)
@@ -187,6 +197,8 @@ func resolve_installation(repo: String, version: String, temp_dir: String, overw
 	var target_cache = cache_dir.path_join(repo.split("/")[1])
 	var pre_state = FileUtiles.load_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), {})
 	var display_name = _resolve_mod_display_name(repo, temp_dir)
+	
+	AppLogger.info("Committing installation files for: " + display_name)
 	
 	status_updated.emit("Committing files asynchronously...")
 	
@@ -239,13 +251,16 @@ func toggle_mod_enabled(repo: String, is_enabled: bool) -> void:
 
 func uninstall_mod(repo: String) -> void:
 	var state = FileUtiles.load_json(data_dir.path_join(AppConfig.MOD_STATE_FILE), {})
-	if not state.has(repo): return
+	if not state.has(repo): 
+		AppLogger.warning("Attempted to uninstall non-existent mod state: " + repo)
+		return
 		
 	var items = state[repo].get("items", [])
 	var is_enabled = state[repo].get("enabled", true)
 	var mod_name = repo.split("/")[1]
 	var target_cache = cache_dir.path_join(mod_name)
 	
+	AppLogger.info("Starting uninstallation process for mod: " + mod_name)
 	status_updated.emit("Uninstalling " + mod_name + "...")
 	
 	ThreadedFileIO.uninstall_mod_async(target_cache, game_mods_dir, items, is_enabled, func():

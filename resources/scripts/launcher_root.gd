@@ -14,9 +14,10 @@ var ready_update_path: String = ""
 @onready var issues_launcher_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/IssuesHBox/ReportIssuesLauncher
 @onready var open_folder_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/FileUtilsHBox/OpenGameDir
 @onready var open_iso_folder_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/FileUtilsHBox/OpenGameIsoDir
+@onready var open_launcher_folder_button: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/FileUtilsHBox2/OpenLauncherDir
 @onready var setup_guide_pc: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/SetupGuidesHBox/OpenSetupGuidePC
 @onready var setup_guide_steam: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/SetupGuidesHBox/OpenSetupGuideSD
-@onready var purge_gamefiles_btn: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/FileUtilsHBox/PurgeGameFiles
+@onready var purge_gamefiles_btn: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Help/ScrollContainer/VBoxContainer/FileUtilsHBox2/PurgeGameFiles
 @onready var gpu_option_btn: OptionButton = $MarginContainer/MainHBox/LeftColumn/TabContainer/Misc/ScrollContainer/VBoxContainer/GPUHBox/OptionButton
 @onready var add_token_btn: Button = $MarginContainer/MainHBox/LeftColumn/TabContainer/Misc/ScrollContainer/VBoxContainer/AddGitTokenButton
 @onready var launch_button: Button = $MarginContainer/MainHBox/RightColumn/LaunchButton
@@ -100,6 +101,7 @@ func _bind_ui_signals() -> void:
 	
 	open_folder_button.pressed.connect(func(): OS.shell_open(active_sc_dir))
 	open_iso_folder_button.pressed.connect(func(): OS.shell_open(active_sc_dir.path_join("isos")))
+	open_launcher_folder_button.pressed.connect(func(): OS.shell_open(base_dir))
 	
 	setup_guide_pc.pressed.connect(func(): OS.shell_open("https://legendofdragoon.org/guides/setup-severed-chains/"))
 	setup_guide_steam.pressed.connect(func(): OS.shell_open("https://legendofdragoon.org/guides/setup-steamdeck/"))
@@ -257,7 +259,8 @@ func _check_engine_installed() -> void:
 		sc_install_btn.visible = false
 	else:
 		sc_install_btn.visible = true
-		sc_install_btn.pressed.connect(_start_engine_install)
+		if not sc_install_btn.pressed.is_connected(_start_engine_install):
+			sc_install_btn.pressed.connect(_start_engine_install)
 		iso_dialog.dialog_text = "Installation complete! Please place your Legend of Dragoon image files into the folder that just opened."
 
 func _start_engine_install() -> void:
@@ -396,25 +399,54 @@ func _apply_update_and_restart(target_pid: int, original_path: String) -> void:
 	while OS.is_process_running(target_pid) and max_wait > 0:
 		OS.delay_msec(100)
 		max_wait -= 1
-	OS.delay_msec(500)
+	# Give Windows extra breathing room to fully release file locks on exit
+	OS.delay_msec(1000) 
 
 	var current_exe = OS.get_executable_path()
-	if current_exe != original_path:
-		if FileAccess.file_exists(original_path):
-			DirAccess.remove_absolute(original_path)
-		DirAccess.copy_absolute(current_exe, original_path)
+	AppLogger.info("Applying update. Current running exe: " + current_exe + " | Target path: " + original_path)
 
+	if current_exe != original_path:
+		# Retry loop to handle Windows file-locking race conditions
+		var success = false
+		for attempt in range(5):
+			if FileAccess.file_exists(original_path):
+				var remove_err = DirAccess.remove_absolute(original_path)
+				if remove_err != OK:
+					AppLogger.warning("Attempt %d: Failed to remove old executable at %s (Error: %d). Retrying..." % [attempt + 1, original_path, remove_err])
+					OS.delay_msec(300)
+					continue
+			
+			var copy_err = DirAccess.copy_absolute(current_exe, original_path)
+			if copy_err == OK:
+				success = true
+				AppLogger.info("Successfully copied new executable to: " + original_path)
+				break
+			else:
+				AppLogger.warning("Attempt %d: Failed to copy executable to %s (Error: %d). Retrying..." % [attempt + 1, original_path, copy_err])
+				OS.delay_msec(500)
+		
+		if not success:
+			AppLogger.error("Critical: Failed to overwrite original executable after 5 attempts.")
+
+		# Update the companion .pck file with retry protection as well
 		var current_pck = current_exe.get_basename() + ".pck"
 		var original_pck = original_path.get_basename() + ".pck"
 		
 		if FileAccess.file_exists(current_pck):
-			if FileAccess.file_exists(original_pck):
-				DirAccess.remove_absolute(original_pck)
-			DirAccess.copy_absolute(current_pck, original_pck)
+			for attempt in range(5):
+				if FileAccess.file_exists(original_pck):
+					DirAccess.remove_absolute(original_pck)
+				var pck_copy_err = DirAccess.copy_absolute(current_pck, original_pck)
+				if pck_copy_err == OK:
+					AppLogger.info("Successfully updated companion .pck file.")
+					break
+				else:
+					OS.delay_msec(300)
 
 		if OS.has_feature("linux") or OS.has_feature("macos") or OS.has_feature("bsd"):
 			FileAccess.set_unix_permissions(original_path, 493)
 
+		AppLogger.info("Launching updated application...")
 		OS.create_process(original_path, [])
 	get_tree().quit()
 
